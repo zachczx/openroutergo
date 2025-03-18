@@ -47,23 +47,59 @@ var (
 //   - Response: https://openrouter.ai/docs/api-reference/overview#completionsresponse-format
 func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 	return &chatCompletionBuilder{
-		client:   c,
-		ctx:      context.Background(),
-		model:    optional.String{IsSet: false},
-		messages: []chatCompletionMessage{},
+		client:             c,
+		ctx:                context.Background(),
+		model:              optional.String{IsSet: false},
+		messages:           []chatCompletionMessage{},
+		tools:              []ChatCompletionTool{},
+		temperature:        optional.Float64{IsSet: false},
+		topP:               optional.Float64{IsSet: false},
+		topK:               optional.Int{IsSet: false},
+		frecuencyPenalty:   optional.Float64{IsSet: false},
+		presencePenalty:    optional.Float64{IsSet: false},
+		repetitionPenalty:  optional.Float64{IsSet: false},
+		minP:               optional.Float64{IsSet: false},
+		topA:               optional.Float64{IsSet: false},
+		seed:               optional.Int{IsSet: false},
+		maxTokens:          optional.Int{IsSet: false},
+		responseFormat:     optional.MapAny{IsSet: false},
+		structuredOutputs:  optional.Bool{IsSet: false},
+		maxPromptPrice:     optional.Float64{IsSet: false},
+		maxCompletionPrice: optional.Float64{IsSet: false},
 	}
 }
 
 type chatCompletionBuilder struct {
-	client   *Client
-	ctx      context.Context
-	model    optional.String
-	messages []chatCompletionMessage
+	client             *Client
+	ctx                context.Context
+	model              optional.String
+	messages           []chatCompletionMessage
+	tools              []ChatCompletionTool
+	temperature        optional.Float64
+	topP               optional.Float64
+	topK               optional.Int
+	frecuencyPenalty   optional.Float64
+	presencePenalty    optional.Float64
+	repetitionPenalty  optional.Float64
+	minP               optional.Float64
+	topA               optional.Float64
+	seed               optional.Int
+	maxTokens          optional.Int
+	responseFormat     optional.MapAny
+	structuredOutputs  optional.Bool
+	maxPromptPrice     optional.Float64
+	maxCompletionPrice optional.Float64
 }
 
 type chatCompletionMessage struct {
 	Role    chatCompletionRole `json:"role"`    // Who the message is from.
 	Content string             `json:"content"` // The content of the message
+}
+
+type ChatCompletionTool struct {
+	Description string         `json:"description,omitempty,omitzero"`
+	Name        string         `json:"name"`
+	Parameters  map[string]any `json:"parameters"`
 }
 
 // ChatCompletionResponse is the response from the OpenRouter API for a chat completion request.
@@ -89,54 +125,93 @@ func (b *chatCompletionBuilder) WithContext(ctx context.Context) *chatCompletion
 
 // WithModel sets the model for the chat completion request.
 //
+// If not set, the default model configured in the OpenRouter user's account will be used.
+//
 // You can search for models here: https://openrouter.ai/models
 func (b *chatCompletionBuilder) WithModel(model string) *chatCompletionBuilder {
 	b.model = optional.String{IsSet: true, Value: model}
 	return b
 }
 
-// AddSystemMessage adds a system message to the chat completion request.
+// WithSystemMessage adds a system message to the chat completion request.
 //
 // All messages are added to the request in the same order they are added.
-func (b *chatCompletionBuilder) AddSystemMessage(message string) *chatCompletionBuilder {
+func (b *chatCompletionBuilder) WithSystemMessage(message string) *chatCompletionBuilder {
 	b.messages = append(b.messages, chatCompletionMessage{Role: RoleSystem, Content: message})
 	return b
 }
 
-// AddUserMessage adds a user message to the chat completion request.
-func (b *chatCompletionBuilder) AddUserMessage(message string) *chatCompletionBuilder {
+// WithUserMessage adds a user message to the chat completion request.
+func (b *chatCompletionBuilder) WithUserMessage(message string) *chatCompletionBuilder {
 	b.messages = append(b.messages, chatCompletionMessage{Role: RoleUser, Content: message})
 	return b
 }
 
-// AddAssistantMessage adds an assistant message to the chat completion request.
-func (b *chatCompletionBuilder) AddAssistantMessage(message string) *chatCompletionBuilder {
+// WithAssistantMessage adds an assistant message to the chat completion request.
+func (b *chatCompletionBuilder) WithAssistantMessage(message string) *chatCompletionBuilder {
 	b.messages = append(b.messages, chatCompletionMessage{Role: RoleAssistant, Content: message})
+	return b
+}
+
+// WithTool adds a tool to the chat completion request so the model can return a tool call.
+//
+// See models supporting tool calling: https://openrouter.ai/models?supported_parameters=tools
+func (b *chatCompletionBuilder) WithTool(tool ChatCompletionTool) *chatCompletionBuilder {
+	b.tools = append(b.tools, tool)
+	return b
+}
+
+// WithTemperature sets the temperature for the chat completion request.
+//
+// This setting influences the variety in the model’s responses. Lower values lead
+// to more predictable and typical responses, while higher values encourage more
+// diverse and less common responses. At 0, the model always gives the same
+// response for a given input.
+//
+// Default: 1.0
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#temperature
+//   - Explanation: https://youtu.be/ezgqHnWvua8
+func (b *chatCompletionBuilder) WithTemperature(temperature float64) *chatCompletionBuilder {
+	b.temperature = optional.Float64{IsSet: true, Value: temperature}
+	return b
+}
+
+// WithTopP sets the top-p value for the chat completion request.
+//
+// This setting limits the model’s choices to a percentage of likely tokens: only the
+// top tokens whose probabilities add up to P. A lower value makes the model’s responses
+// more predictable, while the default setting allows for a full range of token choices.
+// Think of it like a dynamic Top-K.
+//
+// Default: 1.0
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#top-p
+//   - Explanation: https://youtu.be/wQP-im_HInk
+func (b *chatCompletionBuilder) WithTopP(topP float64) *chatCompletionBuilder {
+	b.topP = optional.Float64{IsSet: true, Value: topP}
 	return b
 }
 
 // Execute executes the chat completion request with the configured parameters.
 func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
-	if !b.model.IsSet {
-		return ChatCompletionResponse{}, ErrModelRequired
-	}
-
 	if len(b.messages) == 0 {
 		return ChatCompletionResponse{}, ErrMessagesRequired
 	}
 
-	requestBody, err := json.Marshal(struct {
-		Model    string                  `json:"model"`
-		Messages []chatCompletionMessage `json:"messages"`
-	}{
-		Model:    b.model.Value,
-		Messages: b.messages,
-	})
+	requestBodyMap := map[string]any{
+		"messages": b.messages,
+	}
+	if b.model.IsSet {
+		requestBodyMap["model"] = b.model.Value
+	}
+
+	requestBodyBytes, err := json.Marshal(requestBodyMap)
 	if err != nil {
 		return ChatCompletionResponse{}, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	req, err := b.client.newRequest(b.ctx, http.MethodPost, "/chat/completions", requestBody)
+	req, err := b.client.newRequest(b.ctx, http.MethodPost, "/chat/completions", requestBodyBytes)
 	if err != nil {
 		return ChatCompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
 	}

@@ -14,11 +14,11 @@ const (
 
 // Client represents a client for the OpenRouter API.
 type Client struct {
-	httpClient   *http.Client
 	baseURL      string
 	apiKey       string
 	refererURL   string
 	refererTitle string
+	httpClient   *http.Client
 }
 
 // clientBuilder is a chainable builder for the OpenRouter client.
@@ -30,8 +30,11 @@ type clientBuilder struct {
 func NewClient() *clientBuilder {
 	return &clientBuilder{
 		client: &Client{
-			httpClient: &http.Client{Timeout: defaultTimeout},
-			baseURL:    defaultBaseURL,
+			baseURL:      defaultBaseURL,
+			apiKey:       "",
+			refererURL:   "",
+			refererTitle: "",
+			httpClient:   &http.Client{Timeout: defaultTimeout},
 		},
 	}
 }
@@ -47,29 +50,6 @@ func (b *clientBuilder) WithBaseURL(baseURL string) *clientBuilder {
 // WithAPIKey sets the API key for authentication.
 func (b *clientBuilder) WithAPIKey(apiKey string) *clientBuilder {
 	b.client.apiKey = apiKey
-	return b
-}
-
-// WithHTTPClient sets a custom HTTP client for the API.
-// This allows setting a custom timeout, proxy, etc.
-//
-// If not set, the default HTTP client will be used.
-func (b *clientBuilder) WithHTTPClient(httpClient *http.Client) *clientBuilder {
-	b.client.httpClient = httpClient
-	return b
-}
-
-// WithDefaultTimeout sets a custom common default timeout for the HTTP client to
-// be used for all requests. This can be overridden on a per-request basis using
-// the WithTimeout method.
-//
-// If the default timeout is not set, 3 minutes will be used.
-func (b *clientBuilder) WithDefaultTimeout(timeout time.Duration) *clientBuilder {
-	if b.client.httpClient == nil {
-		b.client.httpClient = &http.Client{}
-	}
-
-	b.client.httpClient.Timeout = timeout
 	return b
 }
 
@@ -92,6 +72,27 @@ func (b *clientBuilder) WithRefererURL(refererURL string) *clientBuilder {
 //   - https://openrouter.ai/docs/api-reference/overview#headers
 func (b *clientBuilder) WithRefererTitle(refererTitle string) *clientBuilder {
 	b.client.refererTitle = refererTitle
+	return b
+}
+
+// WithHTTPClient sets a custom HTTP client for the API, this allows setting
+// a custom timeout, proxy, etc.
+//
+// If not set, the default HTTP client will be used.
+func (b *clientBuilder) WithHTTPClient(httpClient *http.Client) *clientBuilder {
+	b.client.httpClient = httpClient
+	return b
+}
+
+// WithTimeout sets a custom timeout for the HTTP client to be used for all requests.
+//
+// If not set, the default timeout of 3 minutes will be used.
+func (b *clientBuilder) WithTimeout(timeout time.Duration) *clientBuilder {
+	if b.client.httpClient == nil {
+		b.client.httpClient = &http.Client{}
+	}
+
+	b.client.httpClient.Timeout = timeout
 	return b
 }
 

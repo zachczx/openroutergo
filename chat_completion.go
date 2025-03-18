@@ -6,14 +6,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
+)
+
+type chatCompletionRole string
+
+const (
+	RoleSystem    chatCompletionRole = "system"
+	RoleUser      chatCompletionRole = "user"
+	RoleAssistant chatCompletionRole = "assistant"
 )
 
 // NewChatCompletion creates a new chat completion request builder for the OpenRouter API.
 //
 // Docs:
 //   - Reference: https://openrouter.ai/docs/api-reference/chat-completion
-//   - Request: http://openrouter.ai/docs/api-reference/overview#completions-request-format
+//   - Request: https://openrouter.ai/docs/api-reference/overview#completions-request-format
 //   - Parameters: https://openrouter.ai/docs/api-reference/parameters
 //   - Response: https://openrouter.ai/docs/api-reference/overview#completionsresponse-format
 func (c *Client) NewChatCompletion() *chatCompletionBuilder {
@@ -22,7 +29,6 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 		ctx:      context.Background(),
 		model:    "gpt-4o-mini",
 		messages: []chatCompletionMessage{},
-		timeout:  c.httpClient.Timeout,
 	}
 }
 
@@ -30,13 +36,12 @@ type chatCompletionBuilder struct {
 	client   *Client
 	ctx      context.Context
 	model    string
-	timeout  time.Duration
 	messages []chatCompletionMessage
 }
 
 type chatCompletionMessage struct {
-	Role    string `json:"role"`    // Who the message is from. Allowed values: system, user, assistant
-	Content string `json:"content"` // The content of the message
+	Role    chatCompletionRole `json:"role"`    // Who the message is from.
+	Content string             `json:"content"` // The content of the message
 }
 
 // ChatCompletionResponse is the response from the OpenRouter API for a chat completion request.
@@ -44,8 +49,10 @@ type ChatCompletionResponse struct {
 	ID      string `json:"id"`
 	Choices []struct {
 		Message struct {
-			Role    string `json:"role"`    // Who the message is from. Allowed values: system, user, assistant
-			Content string `json:"content"` // The content of the message
+			// Who the message is from. Must be one of openroutergo.RoleSystem, openroutergo.RoleUser, or openroutergo.RoleAssistant.
+			Role chatCompletionRole `json:"role"`
+			// The content of the message
+			Content string `json:"content"`
 		} `json:"message"`
 	} `json:"choices"`
 }
@@ -66,31 +73,23 @@ func (b *chatCompletionBuilder) WithModel(model string) *chatCompletionBuilder {
 	return b
 }
 
-// WithTimeout sets the timeout for the chat completion request.
-//
-// If not set, the default timeout set in the client will be used.
-func (b *chatCompletionBuilder) WithTimeout(timeout time.Duration) *chatCompletionBuilder {
-	b.timeout = timeout
-	return b
-}
-
 // AddSystemMessage adds a system message to the chat completion request.
 //
 // All messages are added to the request in the same order they are added.
 func (b *chatCompletionBuilder) AddSystemMessage(message string) *chatCompletionBuilder {
-	b.messages = append(b.messages, chatCompletionMessage{Role: "system", Content: message})
+	b.messages = append(b.messages, chatCompletionMessage{Role: RoleSystem, Content: message})
 	return b
 }
 
 // AddUserMessage adds a user message to the chat completion request.
 func (b *chatCompletionBuilder) AddUserMessage(message string) *chatCompletionBuilder {
-	b.messages = append(b.messages, chatCompletionMessage{Role: "user", Content: message})
+	b.messages = append(b.messages, chatCompletionMessage{Role: RoleUser, Content: message})
 	return b
 }
 
 // AddAssistantMessage adds an assistant message to the chat completion request.
 func (b *chatCompletionBuilder) AddAssistantMessage(message string) *chatCompletionBuilder {
-	b.messages = append(b.messages, chatCompletionMessage{Role: "assistant", Content: message})
+	b.messages = append(b.messages, chatCompletionMessage{Role: RoleAssistant, Content: message})
 	return b
 }
 

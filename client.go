@@ -3,6 +3,8 @@ package openroutergo
 import (
 	"net/http"
 	"time"
+
+	"github.com/eduardolat/openroutergo/internal/strutil"
 )
 
 const (
@@ -36,7 +38,7 @@ func NewClient() *clientBuilder {
 //
 // If not set, the default base URL will be used: https://openrouter.ai/api/v1
 func (b *clientBuilder) WithBaseURL(baseURL string) *clientBuilder {
-	b.client.baseURL = baseURL
+	b.client.baseURL = strutil.RemoveTrailingSlashes(baseURL)
 	return b
 }
 

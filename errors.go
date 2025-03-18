@@ -11,7 +11,4 @@ var (
 
 	// ErrMessagesRequired is returned when no messages are found and they are needed.
 	ErrMessagesRequired = errors.New("at least one message is required")
-
-	// ErrModelRequired is returned when no model is provided and it is required.
-	ErrModelRequired = errors.New("a model is required")
 )

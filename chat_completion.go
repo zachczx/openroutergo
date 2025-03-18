@@ -6,14 +6,36 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/orsinium-labs/enum"
 )
 
-type chatCompletionRole string
+// chatCompletionRole is an enum for the role of a message in a chat completion.
+type chatCompletionRole enum.Member[string]
 
-const (
-	RoleSystem    chatCompletionRole = "system"
-	RoleUser      chatCompletionRole = "user"
-	RoleAssistant chatCompletionRole = "assistant"
+// MarshalJSON implements the json.Marshaler interface for chatCompletionRole.
+func (ccr chatCompletionRole) MarshalJSON() ([]byte, error) {
+	return json.Marshal(ccr.Value)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface for chatCompletionRole.
+func (ccr *chatCompletionRole) UnmarshalJSON(data []byte) error {
+	var value string
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+
+	*ccr = chatCompletionRole{Value: value}
+	return nil
+}
+
+var (
+	// RoleSystem is the role of a system message in a chat completion.
+	RoleSystem = chatCompletionRole{"system"}
+	// RoleUser is the role of a user message in a chat completion.
+	RoleUser = chatCompletionRole{"user"}
+	// RoleAssistant is the role of an assistant message in a chat completion.
+	RoleAssistant = chatCompletionRole{"assistant"}
 )
 
 // NewChatCompletion creates a new chat completion request builder for the OpenRouter API.

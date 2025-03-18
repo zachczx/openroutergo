@@ -168,8 +168,7 @@ func (b *chatCompletionBuilder) WithTool(tool ChatCompletionTool) *chatCompletio
 // diverse and less common responses. At 0, the model always gives the same
 // response for a given input.
 //
-// Default: 1.0
-//
+//   - Default: 1.0
 //   - Docs: https://openrouter.ai/docs/api-reference/parameters#temperature
 //   - Explanation: https://youtu.be/ezgqHnWvua8
 func (b *chatCompletionBuilder) WithTemperature(temperature float64) *chatCompletionBuilder {
@@ -184,12 +183,167 @@ func (b *chatCompletionBuilder) WithTemperature(temperature float64) *chatComple
 // more predictable, while the default setting allows for a full range of token choices.
 // Think of it like a dynamic Top-K.
 //
-// Default: 1.0
-//
+//   - Default: 1.0
 //   - Docs: https://openrouter.ai/docs/api-reference/parameters#top-p
 //   - Explanation: https://youtu.be/wQP-im_HInk
 func (b *chatCompletionBuilder) WithTopP(topP float64) *chatCompletionBuilder {
 	b.topP = optional.Float64{IsSet: true, Value: topP}
+	return b
+}
+
+// WithTopK sets the top-k value for the chat completion request.
+//
+// This limits the model's choice of tokens at each step, making it choose from
+// a smaller set. A value of 1 means the model will always pick the most likely
+// next token, leading to predictable results. By default this setting is disabled,
+// making the model to consider all choices.
+//
+//   - Default: 0
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#top-k
+//   - Explanation: https://youtu.be/EbZv6-N8Xlk
+func (b *chatCompletionBuilder) WithTopK(topK int) *chatCompletionBuilder {
+	b.topK = optional.Int{IsSet: true, Value: topK}
+	return b
+}
+
+// WithFrequencyPenalty sets the frequency penalty for the chat completion request.
+//
+// This setting aims to control the repetition of tokens based on how often they appear
+// in the input. It tries to use less frequently those tokens that appear more in the
+// input, proportional to how frequently they occur. Token penalty scales with the number
+// of occurrences. Negative values will encourage token reuse.
+//
+//   - Default: 0.0
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#frequency-penalty
+//   - Explanation: https://youtu.be/p4gl6fqI0_w
+func (b *chatCompletionBuilder) WithFrequencyPenalty(frequencyPenalty float64) *chatCompletionBuilder {
+	b.frecuencyPenalty = optional.Float64{IsSet: true, Value: frequencyPenalty}
+	return b
+}
+
+// WithPresencePenalty sets the presence penalty for the chat completion request.
+//
+// Adjusts how often the model repeats specific tokens already used in the input.
+// Higher values make such repetition less likely, while negative values do the opposite.
+// Token penalty does not scale with the number of occurrences. Negative values will
+// encourage token reuse.
+//
+//   - Default: 0.0
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#presence-penalty
+//   - Explanation: https://youtu.be/MwHG5HL-P74
+func (b *chatCompletionBuilder) WithPresencePenalty(presencePenalty float64) *chatCompletionBuilder {
+	b.presencePenalty = optional.Float64{IsSet: true, Value: presencePenalty}
+	return b
+}
+
+// WithRepetitionPenalty sets the repetition penalty for the chat completion request.
+//
+// Helps to reduce the repetition of tokens from the input. A higher value makes the
+// model less likely to repeat tokens, but too high a value can make the output less
+// coherent (often with run-on sentences that lack small words). Token penalty scales
+// based on original token's probability.
+//
+//   - Default: 1.0
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#repetition-penalty
+//   - Explanation: https://youtu.be/LHjGAnLm3DM
+func (b *chatCompletionBuilder) WithRepetitionPenalty(repetitionPenalty float64) *chatCompletionBuilder {
+	b.repetitionPenalty = optional.Float64{IsSet: true, Value: repetitionPenalty}
+	return b
+}
+
+// WithMinP sets the min-p value for the chat completion request.
+//
+// Represents the minimum probability for a token to be considered, relative to
+// the probability of the most likely token. If your Min-P is set to 0.1, that
+// means it will only allow for tokens that are at least 1/10th as probable as
+// the best possible option.
+//
+//   - Default: 0.0
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#min-p
+func (b *chatCompletionBuilder) WithMinP(minP float64) *chatCompletionBuilder {
+	b.minP = optional.Float64{IsSet: true, Value: minP}
+	return b
+}
+
+// WithTopA sets the top-a value for the chat completion request.
+//
+// Consider only the top tokens with "sufficiently high" probabilities based on
+// the probability of the most likely token. Think of it like a dynamic Top-P.
+// A lower Top-A value focuses the choices based on the highest probability token
+// but with a narrower scope.
+//
+//   - Default: 0.0
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#top-a
+func (b *chatCompletionBuilder) WithTopA(topA float64) *chatCompletionBuilder {
+	b.topA = optional.Float64{IsSet: true, Value: topA}
+	return b
+}
+
+// WithSeed sets the seed value for the chat completion request.
+//
+// If specified, the inferencing will sample deterministically, such that repeated
+// requests with the same seed and parameters should return the same result.
+// Determinism is not guaranteed for some models.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#seed
+func (b *chatCompletionBuilder) WithSeed(seed int) *chatCompletionBuilder {
+	b.seed = optional.Int{IsSet: true, Value: seed}
+	return b
+}
+
+// WithMaxTokens sets the maximum number of tokens to generate for the chat completion request.
+//
+// This sets the upper limit for the number of tokens the model can generate in response.
+// It won't produce more than this limit. The maximum value is the context length minus
+// the prompt length.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#max-tokens
+func (b *chatCompletionBuilder) WithMaxTokens(maxTokens int) *chatCompletionBuilder {
+	b.maxTokens = optional.Int{IsSet: true, Value: maxTokens}
+	return b
+}
+
+// WithResponseFormat sets the response format for the chat completion request.
+//
+// Forces the model to produce specific output format. Setting to { "type": "json_object" }
+// enables JSON mode, which guarantees the message the model generates is valid JSON.
+//
+// Note: when using JSON mode, you should also instruct the model to produce JSON
+// yourself via a system or user message.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#response-format
+func (b *chatCompletionBuilder) WithResponseFormat(responseFormat map[string]any) *chatCompletionBuilder {
+	b.responseFormat = optional.MapAny{IsSet: true, Value: responseFormat}
+	return b
+}
+
+// WithStructuredOutputs sets whether the model can return structured outputs.
+//
+// If the model can return structured outputs using response_format json_schema.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#structured-outputs
+func (b *chatCompletionBuilder) WithStructuredOutputs(structuredOutputs bool) *chatCompletionBuilder {
+	b.structuredOutputs = optional.Bool{IsSet: true, Value: structuredOutputs}
+	return b
+}
+
+// WithMaxPromptPrice sets the maximum prompt price accepted for the chat completion request.
+//
+// For example, the value 2 will route to any provider with a price of <= $2/m prompt tokens.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#max-price
+func (b *chatCompletionBuilder) WithMaxPromptPrice(price float64) *chatCompletionBuilder {
+	b.maxPromptPrice = optional.Float64{IsSet: true, Value: price}
+	return b
+}
+
+// WithMaxCompletionPrice sets the maximum completion price accepted for the chat completion request.
+//
+// For example, the value 2 will route to any provider with a price of <= $2/m completion tokens.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#max-price
+func (b *chatCompletionBuilder) WithMaxCompletionPrice(price float64) *chatCompletionBuilder {
+	b.maxCompletionPrice = optional.Float64{IsSet: true, Value: price}
 	return b
 }
 

@@ -73,3 +73,19 @@ type Float64 = Optional[float64]
 // If IsSet is false, the Value is not set.
 // If IsSet is true, the Value is set.
 type Bool = Optional[bool]
+
+// Any is an optional any type.
+//
+// It is used to represent a value of any type that may or may not be set.
+//
+// If IsSet is false, the Value is not set.
+// If IsSet is true, the Value is set.
+type Any = Optional[any]
+
+// MapAny is an optional map of any type.
+//
+// It is used to represent a map of any type that may or may not be set.
+//
+// If IsSet is false, the Value is not set.
+// If IsSet is true, the Value is set.
+type MapAny = Optional[map[string]any]

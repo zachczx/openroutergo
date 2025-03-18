@@ -43,6 +43,8 @@ func TestDerivedTypes(t *testing.T) {
 		original := String{IsSet: true, Value: "test"}
 		data, err := json.Marshal(&original)
 		assert.NoError(t, err)
+
+		// Unmarshal
 		var result String
 		err = json.Unmarshal(data, &result)
 		assert.NoError(t, err)
@@ -62,6 +64,11 @@ func TestDerivedTypes(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, num.IsSet)
 		assert.Equal(t, 99, num.Value)
+
+		// Marshal
+		data, err := json.Marshal(&num)
+		assert.NoError(t, err)
+		assert.Equal(t, `99`, string(data))
 	})
 
 	t.Run("Bool", func(t *testing.T) {
@@ -75,6 +82,71 @@ func TestDerivedTypes(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, result.IsSet)
 		assert.False(t, result.Value)
+	})
+
+	t.Run("Float64", func(t *testing.T) {
+		// Test marshal
+		original := Float64{IsSet: true, Value: 3.14}
+		data, err := json.Marshal(original)
+		assert.NoError(t, err)
+		assert.Equal(t, `3.14`, string(data))
+
+		// Test float64 with null value
+		var num Float64
+		err = json.Unmarshal([]byte("null"), &num)
+		assert.NoError(t, err)
+		assert.False(t, num.IsSet)
+
+		// Test with value
+		err = json.Unmarshal([]byte("3.14"), &num)
+		assert.NoError(t, err)
+		assert.True(t, num.IsSet)
+		assert.Equal(t, 3.14, num.Value)
+	})
+
+	t.Run("Any", func(t *testing.T) {
+		// Test anyVar with null value
+		var anyVar Any
+		err := json.Unmarshal([]byte("null"), &anyVar)
+		assert.NoError(t, err)
+		assert.False(t, anyVar.IsSet)
+
+		// Test anyVar with string
+		err = json.Unmarshal([]byte(`"test"`), &anyVar)
+		assert.NoError(t, err)
+		assert.True(t, anyVar.IsSet)
+
+		// Test with value
+		err = json.Unmarshal([]byte("{\"key\": \"value\"}"), &anyVar)
+		assert.NoError(t, err)
+		assert.True(t, anyVar.IsSet)
+		anyMap := anyVar.Value.(map[string]interface{})
+		assert.Equal(t, "value", anyMap["key"])
+
+		// Marshal test
+		data, err := json.Marshal(&anyVar)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"key":"value"}`, string(data))
+	})
+
+	t.Run("MapAny", func(t *testing.T) {
+		// Test map[string]any with null value
+		var mapAny MapAny
+		err := json.Unmarshal([]byte("null"), &mapAny)
+		assert.NoError(t, err)
+		assert.False(t, mapAny.IsSet)
+
+		// Test with value
+		err = json.Unmarshal([]byte("{\"key\": \"value\"}"), &mapAny)
+		assert.NoError(t, err)
+		assert.True(t, mapAny.IsSet)
+		mapAnyMap := mapAny.Value
+		assert.Equal(t, "value", mapAnyMap["key"])
+
+		// Marshal test
+		data, err := json.Marshal(&mapAny)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"key":"value"}`, string(data))
 	})
 }
 

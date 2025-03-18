@@ -1,7 +1,6 @@
 package openroutergo
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -136,13 +135,10 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 		return ChatCompletionResponse{}, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(b.ctx, http.MethodPost, b.client.baseURL+"/chat/completions", bytes.NewBuffer(requestBody))
+	req, err := b.client.newRequest(b.ctx, http.MethodPost, "/chat/completions", requestBody)
 	if err != nil {
 		return ChatCompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+b.client.apiKey)
 
 	resp, err := b.client.httpClient.Do(req)
 	if err != nil {

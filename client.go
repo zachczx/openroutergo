@@ -1,6 +1,8 @@
 package openroutergo
 
 import (
+	"bytes"
+	"context"
 	"net/http"
 	"time"
 
@@ -107,4 +109,25 @@ func (b *clientBuilder) Create() (*Client, error) {
 	}
 
 	return b.client, nil
+}
+
+// newRequest creates a new request for the OpenRouter API, it sets the
+// necessary headers and adds the API key to the request.
+func (c *Client) newRequest(ctx context.Context, method string, path string, body []byte) (*http.Request, error) {
+	url := strutil.CreateEndpoint(c.baseURL, path)
+	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	if c.refererURL != "" {
+		req.Header.Set("HTTP-Referer", c.refererURL)
+	}
+	if c.refererTitle != "" {
+		req.Header.Set("X-Title", c.refererTitle)
+	}
+
+	return req, nil
 }

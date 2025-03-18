@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/eduardolat/openroutergo/internal/optional"
 	"github.com/orsinium-labs/enum"
 )
 
@@ -48,7 +49,7 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 	return &chatCompletionBuilder{
 		client:   c,
 		ctx:      context.Background(),
-		model:    "gpt-4o-mini",
+		model:    optional.String{IsSet: false},
 		messages: []chatCompletionMessage{},
 	}
 }
@@ -56,7 +57,7 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 type chatCompletionBuilder struct {
 	client   *Client
 	ctx      context.Context
-	model    string
+	model    optional.String
 	messages []chatCompletionMessage
 }
 
@@ -90,7 +91,7 @@ func (b *chatCompletionBuilder) WithContext(ctx context.Context) *chatCompletion
 //
 // You can search for models here: https://openrouter.ai/models
 func (b *chatCompletionBuilder) WithModel(model string) *chatCompletionBuilder {
-	b.model = model
+	b.model = optional.String{IsSet: true, Value: model}
 	return b
 }
 
@@ -116,7 +117,7 @@ func (b *chatCompletionBuilder) AddAssistantMessage(message string) *chatComplet
 
 // Execute executes the chat completion request with the configured parameters.
 func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
-	if b.model == "" {
+	if !b.model.IsSet {
 		return ChatCompletionResponse{}, ErrModelRequired
 	}
 
@@ -128,7 +129,7 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 		Model    string                  `json:"model"`
 		Messages []chatCompletionMessage `json:"messages"`
 	}{
-		Model:    b.model,
+		Model:    b.model.Value,
 		Messages: b.messages,
 	})
 	if err != nil {

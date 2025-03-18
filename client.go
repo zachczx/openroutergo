@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/eduardolat/openroutergo/internal/optional"
 	"github.com/eduardolat/openroutergo/internal/strutil"
 )
 
@@ -17,9 +18,9 @@ const (
 // Client represents a client for the OpenRouter API.
 type Client struct {
 	baseURL      string
-	apiKey       string
-	refererURL   string
-	refererTitle string
+	apiKey       optional.String
+	refererURL   optional.String
+	refererTitle optional.String
 	httpClient   *http.Client
 }
 
@@ -33,9 +34,9 @@ func NewClient() *clientBuilder {
 	return &clientBuilder{
 		client: &Client{
 			baseURL:      defaultBaseURL,
-			apiKey:       "",
-			refererURL:   "",
-			refererTitle: "",
+			apiKey:       optional.String{IsSet: false},
+			refererURL:   optional.String{IsSet: false},
+			refererTitle: optional.String{IsSet: false},
 			httpClient:   &http.Client{Timeout: defaultTimeout},
 		},
 	}
@@ -51,7 +52,7 @@ func (b *clientBuilder) WithBaseURL(baseURL string) *clientBuilder {
 
 // WithAPIKey sets the API key for authentication.
 func (b *clientBuilder) WithAPIKey(apiKey string) *clientBuilder {
-	b.client.apiKey = apiKey
+	b.client.apiKey = optional.String{IsSet: true, Value: apiKey}
 	return b
 }
 
@@ -62,7 +63,7 @@ func (b *clientBuilder) WithAPIKey(apiKey string) *clientBuilder {
 //
 //   - https://openrouter.ai/docs/api-reference/overview#headers
 func (b *clientBuilder) WithRefererURL(refererURL string) *clientBuilder {
-	b.client.refererURL = refererURL
+	b.client.refererURL = optional.String{IsSet: true, Value: refererURL}
 	return b
 }
 
@@ -73,7 +74,7 @@ func (b *clientBuilder) WithRefererURL(refererURL string) *clientBuilder {
 //
 //   - https://openrouter.ai/docs/api-reference/overview#headers
 func (b *clientBuilder) WithRefererTitle(refererTitle string) *clientBuilder {
-	b.client.refererTitle = refererTitle
+	b.client.refererTitle = optional.String{IsSet: true, Value: refererTitle}
 	return b
 }
 
@@ -104,7 +105,7 @@ func (b *clientBuilder) Create() (*Client, error) {
 		return nil, ErrBaseURLRequired
 	}
 
-	if b.client.apiKey == "" {
+	if !b.client.apiKey.IsSet {
 		return nil, ErrAPIKeyRequired
 	}
 
@@ -121,12 +122,12 @@ func (c *Client) newRequest(ctx context.Context, method string, path string, bod
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+c.apiKey)
-	if c.refererURL != "" {
-		req.Header.Set("HTTP-Referer", c.refererURL)
+	req.Header.Set("Authorization", "Bearer "+c.apiKey.Value)
+	if c.refererURL.IsSet {
+		req.Header.Set("HTTP-Referer", c.refererURL.Value)
 	}
-	if c.refererTitle != "" {
-		req.Header.Set("X-Title", c.refererTitle)
+	if c.refererTitle.IsSet {
+		req.Header.Set("X-Title", c.refererTitle.Value)
 	}
 
 	return req, nil

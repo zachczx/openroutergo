@@ -13,6 +13,10 @@ type Optional[T any] struct {
 	Value T
 }
 
+func (o Optional[T]) IsZero() bool {
+	return !o.IsSet
+}
+
 func (o Optional[T]) MarshalJSON() ([]byte, error) {
 	if !o.IsSet {
 		return []byte("null"), nil

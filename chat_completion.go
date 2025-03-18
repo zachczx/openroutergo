@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/eduardolat/openroutergo/internal/optional"
 	"github.com/orsinium-labs/enum"
@@ -64,6 +65,7 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 		maxTokens:          optional.Int{IsSet: false},
 		responseFormat:     optional.MapAny{IsSet: false},
 		structuredOutputs:  optional.Bool{IsSet: false},
+		toolChoice:         optional.String{IsSet: false},
 		maxPromptPrice:     optional.Float64{IsSet: false},
 		maxCompletionPrice: optional.Float64{IsSet: false},
 	}
@@ -87,6 +89,7 @@ type chatCompletionBuilder struct {
 	maxTokens          optional.Int
 	responseFormat     optional.MapAny
 	structuredOutputs  optional.Bool
+	toolChoice         optional.String
 	maxPromptPrice     optional.Float64
 	maxCompletionPrice optional.Float64
 }
@@ -332,6 +335,22 @@ func (b *chatCompletionBuilder) WithStructuredOutputs(structuredOutputs bool) *c
 	return b
 }
 
+// WithToolChoice controls which (if any) tool is called by the model.
+//
+//   - none: The model will not call any tool and instead generates a message.
+//   - auto: The model can pick between generating a message or calling one or more tools.
+//   - required: The model must call one or more tools.
+//
+// If you want to force the model to call a specific tool, set the toolChoice parameter
+// to the name of the tool you want to call and this will send the tool in the correct
+// format to the model.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#tool-choice
+func (b *chatCompletionBuilder) WithToolChoice(toolChoice string) *chatCompletionBuilder {
+	b.toolChoice = optional.String{IsSet: true, Value: toolChoice}
+	return b
+}
+
 // WithMaxPrice sets the maximum price accepted for the chat completion request for both prompt and completion tokens.
 //
 // For example, the value (1, 2) will route to any provider with a price of <= $1/m prompt tokens and <= $2/m completion tokens.
@@ -394,6 +413,18 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 	}
 	if b.structuredOutputs.IsSet {
 		requestBodyMap["structured_outputs"] = b.structuredOutputs.Value
+	}
+	if b.toolChoice.IsSet {
+		if slices.Contains([]string{"none", "auto", "required"}, b.toolChoice.Value) {
+			requestBodyMap["tool_choice"] = b.toolChoice.Value
+		} else {
+			requestBodyMap["tool_choice"] = map[string]any{
+				"type": "function",
+				"function": map[string]string{
+					"name": b.toolChoice.Value,
+				},
+			}
+		}
 	}
 	if b.maxPromptPrice.IsSet && b.maxCompletionPrice.IsSet {
 		requestBodyMap["max_price"] = map[string]float64{

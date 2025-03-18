@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	DefaultBaseURL = "https://openrouter.ai/api/v1"
-	DefaultTimeout = 3 * time.Minute
+	defaultBaseURL = "https://openrouter.ai/api/v1"
+	defaultTimeout = 3 * time.Minute
 )
 
 // Client represents a client for the OpenRouter API.
@@ -26,8 +26,8 @@ type clientBuilder struct {
 func NewClient() *clientBuilder {
 	return &clientBuilder{
 		client: &Client{
-			httpClient: &http.Client{Timeout: DefaultTimeout},
-			baseURL:    DefaultBaseURL,
+			httpClient: &http.Client{Timeout: defaultTimeout},
+			baseURL:    defaultBaseURL,
 		},
 	}
 }

@@ -8,4 +8,10 @@ var (
 
 	// ErrAPIKeyRequired is returned when the API key is needed but not provided.
 	ErrAPIKeyRequired = errors.New("the API key is required")
+
+	// ErrMessagesRequired is returned when no messages are found and they are needed.
+	ErrMessagesRequired = errors.New("at least one message is required")
+
+	// ErrModelRequired is returned when no model is provided and it is required.
+	ErrModelRequired = errors.New("a model is required")
 )

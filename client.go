@@ -14,9 +14,11 @@ const (
 
 // Client represents a client for the OpenRouter API.
 type Client struct {
-	httpClient *http.Client
-	baseURL    string
-	apiKey     string
+	httpClient   *http.Client
+	baseURL      string
+	apiKey       string
+	refererURL   string
+	refererTitle string
 }
 
 // clientBuilder is a chainable builder for the OpenRouter client.
@@ -68,6 +70,28 @@ func (b *clientBuilder) WithDefaultTimeout(timeout time.Duration) *clientBuilder
 	}
 
 	b.client.httpClient.Timeout = timeout
+	return b
+}
+
+// WithRefererURL sets the referer URL for the API which identifies your app
+// and allows it to be tracked and discoverable on OpenRouter.
+//
+// It uses the `HTTP-Referer` header.
+//
+//   - https://openrouter.ai/docs/api-reference/overview#headers
+func (b *clientBuilder) WithRefererURL(refererURL string) *clientBuilder {
+	b.client.refererURL = refererURL
+	return b
+}
+
+// WithRefererTitle sets the referer title for the API which identifies your app
+// and allows it to be discoverable on OpenRouter.
+//
+// It uses the `X-Title` header.
+//
+//   - https://openrouter.ai/docs/api-reference/overview#headers
+func (b *clientBuilder) WithRefererTitle(refererTitle string) *clientBuilder {
+	b.client.refererTitle = refererTitle
 	return b
 }
 

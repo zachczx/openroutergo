@@ -51,7 +51,7 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 		ctx:                context.Background(),
 		model:              optional.String{IsSet: false},
 		messages:           []chatCompletionMessage{},
-		tools:              []ChatCompletionTool{},
+		tools:              []chatCompletionToolFunction{},
 		temperature:        optional.Float64{IsSet: false},
 		topP:               optional.Float64{IsSet: false},
 		topK:               optional.Int{IsSet: false},
@@ -74,7 +74,7 @@ type chatCompletionBuilder struct {
 	ctx                context.Context
 	model              optional.String
 	messages           []chatCompletionMessage
-	tools              []ChatCompletionTool
+	tools              []chatCompletionToolFunction
 	temperature        optional.Float64
 	topP               optional.Float64
 	topK               optional.Int
@@ -94,6 +94,11 @@ type chatCompletionBuilder struct {
 type chatCompletionMessage struct {
 	Role    chatCompletionRole `json:"role"`    // Who the message is from.
 	Content string             `json:"content"` // The content of the message
+}
+
+type chatCompletionToolFunction struct {
+	Type     string             `json:"type"` // Always "function"
+	Function ChatCompletionTool `json:"function"`
 }
 
 type ChatCompletionTool struct {
@@ -157,7 +162,7 @@ func (b *chatCompletionBuilder) WithAssistantMessage(message string) *chatComple
 //
 // See models supporting tool calling: https://openrouter.ai/models?supported_parameters=tools
 func (b *chatCompletionBuilder) WithTool(tool ChatCompletionTool) *chatCompletionBuilder {
-	b.tools = append(b.tools, tool)
+	b.tools = append(b.tools, chatCompletionToolFunction{Type: "function", Function: tool})
 	return b
 }
 
@@ -327,23 +332,14 @@ func (b *chatCompletionBuilder) WithStructuredOutputs(structuredOutputs bool) *c
 	return b
 }
 
-// WithMaxPromptPrice sets the maximum prompt price accepted for the chat completion request.
+// WithMaxPrice sets the maximum price accepted for the chat completion request for both prompt and completion tokens.
 //
-// For example, the value 2 will route to any provider with a price of <= $2/m prompt tokens.
-//
-//   - Docs: https://openrouter.ai/docs/api-reference/parameters#max-price
-func (b *chatCompletionBuilder) WithMaxPromptPrice(price float64) *chatCompletionBuilder {
-	b.maxPromptPrice = optional.Float64{IsSet: true, Value: price}
-	return b
-}
-
-// WithMaxCompletionPrice sets the maximum completion price accepted for the chat completion request.
-//
-// For example, the value 2 will route to any provider with a price of <= $2/m completion tokens.
+// For example, the value (1, 2) will route to any provider with a price of <= $1/m prompt tokens and <= $2/m completion tokens.
 //
 //   - Docs: https://openrouter.ai/docs/api-reference/parameters#max-price
-func (b *chatCompletionBuilder) WithMaxCompletionPrice(price float64) *chatCompletionBuilder {
-	b.maxCompletionPrice = optional.Float64{IsSet: true, Value: price}
+func (b *chatCompletionBuilder) WithMaxPrice(maxPromptPrice float64, maxCompletionPrice float64) *chatCompletionBuilder {
+	b.maxPromptPrice = optional.Float64{IsSet: true, Value: maxPromptPrice}
+	b.maxCompletionPrice = optional.Float64{IsSet: true, Value: maxCompletionPrice}
 	return b
 }
 
@@ -353,11 +349,57 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 		return ChatCompletionResponse{}, ErrMessagesRequired
 	}
 
-	requestBodyMap := map[string]any{
-		"messages": b.messages,
+	requestBodyMap := map[string]any{}
+	if len(b.messages) > 0 {
+		requestBodyMap["messages"] = b.messages
+	}
+	if len(b.tools) > 0 {
+		requestBodyMap["tools"] = b.tools
 	}
 	if b.model.IsSet {
 		requestBodyMap["model"] = b.model.Value
+	}
+	if b.temperature.IsSet {
+		requestBodyMap["temperature"] = b.temperature.Value
+	}
+	if b.topP.IsSet {
+		requestBodyMap["top_p"] = b.topP.Value
+	}
+	if b.topK.IsSet {
+		requestBodyMap["top_k"] = b.topK.Value
+	}
+	if b.frecuencyPenalty.IsSet {
+		requestBodyMap["frequency_penalty"] = b.frecuencyPenalty.Value
+	}
+	if b.presencePenalty.IsSet {
+		requestBodyMap["presence_penalty"] = b.presencePenalty.Value
+	}
+	if b.repetitionPenalty.IsSet {
+		requestBodyMap["repetition_penalty"] = b.repetitionPenalty.Value
+	}
+	if b.minP.IsSet {
+		requestBodyMap["min_p"] = b.minP.Value
+	}
+	if b.topA.IsSet {
+		requestBodyMap["top_a"] = b.topA.Value
+	}
+	if b.seed.IsSet {
+		requestBodyMap["seed"] = b.seed.Value
+	}
+	if b.maxTokens.IsSet {
+		requestBodyMap["max_tokens"] = b.maxTokens.Value
+	}
+	if b.responseFormat.IsSet {
+		requestBodyMap["response_format"] = b.responseFormat.Value
+	}
+	if b.structuredOutputs.IsSet {
+		requestBodyMap["structured_outputs"] = b.structuredOutputs.Value
+	}
+	if b.maxPromptPrice.IsSet && b.maxCompletionPrice.IsSet {
+		requestBodyMap["max_price"] = map[string]float64{
+			"prompt":     b.maxPromptPrice.Value,
+			"completion": b.maxCompletionPrice.Value,
+		}
 	}
 
 	requestBodyBytes, err := json.Marshal(requestBodyMap)

@@ -52,7 +52,6 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 		ctx:                context.Background(),
 		model:              optional.String{IsSet: false},
 		messages:           []chatCompletionMessage{},
-		tools:              []chatCompletionToolFunction{},
 		temperature:        optional.Float64{IsSet: false},
 		topP:               optional.Float64{IsSet: false},
 		topK:               optional.Int{IsSet: false},
@@ -63,8 +62,13 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 		topA:               optional.Float64{IsSet: false},
 		seed:               optional.Int{IsSet: false},
 		maxTokens:          optional.Int{IsSet: false},
-		responseFormat:     optional.MapAny{IsSet: false},
+		logitBias:          optional.MapIntInt{IsSet: false},
+		logprobs:           optional.Bool{IsSet: false},
+		topLogprobs:        optional.Int{IsSet: false},
+		responseFormat:     optional.MapStringAny{IsSet: false},
 		structuredOutputs:  optional.Bool{IsSet: false},
+		stop:               []string{},
+		tools:              []chatCompletionToolFunction{},
 		toolChoice:         optional.String{IsSet: false},
 		maxPromptPrice:     optional.Float64{IsSet: false},
 		maxCompletionPrice: optional.Float64{IsSet: false},
@@ -76,7 +80,6 @@ type chatCompletionBuilder struct {
 	ctx                context.Context
 	model              optional.String
 	messages           []chatCompletionMessage
-	tools              []chatCompletionToolFunction
 	temperature        optional.Float64
 	topP               optional.Float64
 	topK               optional.Int
@@ -87,8 +90,13 @@ type chatCompletionBuilder struct {
 	topA               optional.Float64
 	seed               optional.Int
 	maxTokens          optional.Int
-	responseFormat     optional.MapAny
+	logitBias          optional.MapIntInt
+	logprobs           optional.Bool
+	topLogprobs        optional.Int
+	responseFormat     optional.MapStringAny
 	structuredOutputs  optional.Bool
+	stop               []string
+	tools              []chatCompletionToolFunction
 	toolChoice         optional.String
 	maxPromptPrice     optional.Float64
 	maxCompletionPrice optional.Float64
@@ -158,14 +166,6 @@ func (b *chatCompletionBuilder) WithUserMessage(message string) *chatCompletionB
 // WithAssistantMessage adds an assistant message to the chat completion request.
 func (b *chatCompletionBuilder) WithAssistantMessage(message string) *chatCompletionBuilder {
 	b.messages = append(b.messages, chatCompletionMessage{Role: RoleAssistant, Content: message})
-	return b
-}
-
-// WithTool adds a tool to the chat completion request so the model can return a tool call.
-//
-// See models supporting tool calling: https://openrouter.ai/models?supported_parameters=tools
-func (b *chatCompletionBuilder) WithTool(tool ChatCompletionTool) *chatCompletionBuilder {
-	b.tools = append(b.tools, chatCompletionToolFunction{Type: "function", Function: tool})
 	return b
 }
 
@@ -311,6 +311,37 @@ func (b *chatCompletionBuilder) WithMaxTokens(maxTokens int) *chatCompletionBuil
 	return b
 }
 
+// WithLogitBias Accepts a JSON object that maps tokens (specified by their token ID in the tokenizer) to
+// an associated bias value from -100 to 100. Mathematically, the bias is added to the logits generated
+// by the model prior to sampling. The exact effect will vary per model, but values between -1 and 1 should
+// decrease or increase likelihood of selection; values like -100 or 100 should result in a ban or
+// exclusive selection of the relevant token.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#logit-bias
+func (b *chatCompletionBuilder) WithLogitBias(logitBias map[int]int) *chatCompletionBuilder {
+	b.logitBias = optional.MapIntInt{IsSet: true, Value: logitBias}
+	return b
+}
+
+// WithLogprobs Whether to return log probabilities of the output tokens or not. If true, returns the
+// log probabilities of each output token returned.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#logprobs
+func (b *chatCompletionBuilder) WithLogprobs(logprobs bool) *chatCompletionBuilder {
+	b.logprobs = optional.Bool{IsSet: true, Value: logprobs}
+	return b
+}
+
+// WithTopLogprobs An integer between 0 and 20 specifying the number of most likely tokens to return
+// at each token position, each with an associated log probability. logprobs must be set to true if
+// this parameter is used.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#top-logprobs
+func (b *chatCompletionBuilder) WithTopLogprobs(topLogprobs int) *chatCompletionBuilder {
+	b.topLogprobs = optional.Int{IsSet: true, Value: topLogprobs}
+	return b
+}
+
 // WithResponseFormat sets the response format for the chat completion request.
 //
 // Forces the model to produce specific output format. Setting to { "type": "json_object" }
@@ -321,7 +352,7 @@ func (b *chatCompletionBuilder) WithMaxTokens(maxTokens int) *chatCompletionBuil
 //
 //   - Docs: https://openrouter.ai/docs/api-reference/parameters#response-format
 func (b *chatCompletionBuilder) WithResponseFormat(responseFormat map[string]any) *chatCompletionBuilder {
-	b.responseFormat = optional.MapAny{IsSet: true, Value: responseFormat}
+	b.responseFormat = optional.MapStringAny{IsSet: true, Value: responseFormat}
 	return b
 }
 
@@ -332,6 +363,22 @@ func (b *chatCompletionBuilder) WithResponseFormat(responseFormat map[string]any
 //   - Docs: https://openrouter.ai/docs/api-reference/parameters#structured-outputs
 func (b *chatCompletionBuilder) WithStructuredOutputs(structuredOutputs bool) *chatCompletionBuilder {
 	b.structuredOutputs = optional.Bool{IsSet: true, Value: structuredOutputs}
+	return b
+}
+
+// WithStop Stop generation immediately if the model encounter any token specified in the stop array.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/parameters#stop
+func (b *chatCompletionBuilder) WithStop(stop []string) *chatCompletionBuilder {
+	b.stop = stop
+	return b
+}
+
+// WithTool adds a tool to the chat completion request so the model can return a tool call.
+//
+// See models supporting tool calling: https://openrouter.ai/models?supported_parameters=tools
+func (b *chatCompletionBuilder) WithTool(tool ChatCompletionTool) *chatCompletionBuilder {
+	b.tools = append(b.tools, chatCompletionToolFunction{Type: "function", Function: tool})
 	return b
 }
 
@@ -372,9 +419,6 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 	if len(b.messages) > 0 {
 		requestBodyMap["messages"] = b.messages
 	}
-	if len(b.tools) > 0 {
-		requestBodyMap["tools"] = b.tools
-	}
 	if b.model.IsSet {
 		requestBodyMap["model"] = b.model.Value
 	}
@@ -408,11 +452,26 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 	if b.maxTokens.IsSet {
 		requestBodyMap["max_tokens"] = b.maxTokens.Value
 	}
+	if b.logitBias.IsSet {
+		requestBodyMap["logit_bias"] = b.logitBias.Value
+	}
+	if b.logprobs.IsSet {
+		requestBodyMap["logprobs"] = b.logprobs.Value
+	}
+	if b.topLogprobs.IsSet {
+		requestBodyMap["top_logprobs"] = b.topLogprobs.Value
+	}
 	if b.responseFormat.IsSet {
 		requestBodyMap["response_format"] = b.responseFormat.Value
 	}
 	if b.structuredOutputs.IsSet {
 		requestBodyMap["structured_outputs"] = b.structuredOutputs.Value
+	}
+	if len(b.stop) > 0 {
+		requestBodyMap["stop"] = b.stop
+	}
+	if len(b.tools) > 0 {
+		requestBodyMap["tools"] = b.tools
 	}
 	if b.toolChoice.IsSet {
 		if slices.Contains([]string{"none", "auto", "required"}, b.toolChoice.Value) {

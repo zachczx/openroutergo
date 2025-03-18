@@ -129,9 +129,9 @@ func TestDerivedTypes(t *testing.T) {
 		assert.Equal(t, `{"key":"value"}`, string(data))
 	})
 
-	t.Run("MapAny", func(t *testing.T) {
+	t.Run("MapStringAny", func(t *testing.T) {
 		// Test map[string]any with null value
-		var mapAny MapAny
+		var mapAny MapStringAny
 		err := json.Unmarshal([]byte("null"), &mapAny)
 		assert.NoError(t, err)
 		assert.False(t, mapAny.IsSet)
@@ -147,6 +147,47 @@ func TestDerivedTypes(t *testing.T) {
 		data, err := json.Marshal(&mapAny)
 		assert.NoError(t, err)
 		assert.Equal(t, `{"key":"value"}`, string(data))
+	})
+
+	t.Run("MapStringString", func(t *testing.T) {
+		// Test map[string]string with null value
+		var mapString MapStringString
+		err := json.Unmarshal([]byte("null"), &mapString)
+		assert.NoError(t, err)
+		assert.False(t, mapString.IsSet)
+
+		// Test with value
+		err = json.Unmarshal([]byte("{\"key\": \"value\"}"), &mapString)
+		assert.NoError(t, err)
+		assert.True(t, mapString.IsSet)
+		mapStringMap := mapString.Value
+		assert.Equal(t, "value", mapStringMap["key"])
+
+		// Marshal test
+		data, err := json.Marshal(&mapString)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"key":"value"}`, string(data))
+	})
+
+	t.Run("MapIntInt", func(t *testing.T) {
+		// Test map[int]int with null value
+		var mapInt MapIntInt
+		err := json.Unmarshal([]byte("null"), &mapInt)
+		assert.NoError(t, err)
+		assert.False(t, mapInt.IsSet)
+
+		// Test with value
+		err = json.Unmarshal([]byte("{\"1\": 2, \"3\": 4}"), &mapInt)
+		assert.NoError(t, err)
+		assert.True(t, mapInt.IsSet)
+		mapIntMap := mapInt.Value
+		assert.Equal(t, 2, mapIntMap[1])
+		assert.Equal(t, 4, mapIntMap[3])
+
+		// Marshal test
+		data, err := json.Marshal(&mapInt)
+		assert.NoError(t, err)
+		assert.Equal(t, `{"1":2,"3":4}`, string(data))
 	})
 }
 

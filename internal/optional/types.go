@@ -82,10 +82,26 @@ type Bool = Optional[bool]
 // If IsSet is true, the Value is set.
 type Any = Optional[any]
 
-// MapAny is an optional map of any type.
+// MapStringAny is an optional map of string to any type.
 //
-// It is used to represent a map of any type that may or may not be set.
+// It is used to represent a map of string to any type that may or may not be set.
 //
 // If IsSet is false, the Value is not set.
 // If IsSet is true, the Value is set.
-type MapAny = Optional[map[string]any]
+type MapStringAny = Optional[map[string]any]
+
+// MapStringString is an optional map of string to string.
+//
+// It is used to represent a map of string to string that may or may not be set.
+//
+// If IsSet is false, the Value is not set.
+// If IsSet is true, the Value is set.
+type MapStringString = Optional[map[string]string]
+
+// MapIntInt is an optional map of int to int.
+//
+// It is used to represent a map of int to int that may or may not be set.
+//
+// If IsSet is false, the Value is not set.
+// If IsSet is true, the Value is set.
+type MapIntInt = Optional[map[int]int]

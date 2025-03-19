@@ -29,12 +29,16 @@ func main() {
 		WithDebug(true).  // Enable debug mode to see the request and response in the console
 		WithModel(model). // Change the model if you want
 
-		// This is the basic JSON Mode that only guarantees the message the model
-		// generates is valid JSON. 👇
+		// The following is the basic JSON Mode that only guarantees the message the model
+		// generates is valid JSON but it doesn't guarantee that the JSON matches
+		// any specific schema. 👇
+		//
 		// WithResponseFormat(map[string]any{"type": "json_object"}).
-
-		// This is the JSON Schema Mode that guarantees the message the model
-		// generates is valid JSON and matches the provided schema.
+		//
+		// --------------------------------------------------------------------------------
+		//
+		// However, if you want to guarantee that the JSON matches a specific schema, you
+		// can use the JSON Schema Mode. 👇
 		WithResponseFormat(map[string]any{
 			"type": "json_schema",
 			"json_schema": map[string]any{

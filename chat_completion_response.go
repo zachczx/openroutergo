@@ -55,6 +55,8 @@ type ChatCompletionResponse struct {
 	Created int `json:"created"`
 	// The model used for the chat completion.
 	Model string `json:"model"`
+	// The provider used for the chat completion.
+	Provider string `json:"provider"`
 	// The object type, which is always "chat.completion"
 	Object string `json:"object"`
 }

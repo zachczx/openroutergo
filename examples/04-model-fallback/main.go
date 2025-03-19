@@ -7,10 +7,14 @@ import (
 	"github.com/eduardolat/openroutergo"
 )
 
-// You can copy this code to https://play.go.dev modify the api key, model, and run it.
-
-// In this example, we use a paid model as last fallback and is only used if
-// all free models fail.
+// In this example, we set up three fallback models. The idea is to use free models
+// first, and only if they fail, a paid model is used as the last fallback.
+//
+// This demonstrates how to configure fallback models to ensure that the request
+// is handled by a model and when it fails because the rate limits, context window,
+// or other reasons, the request is automatically retried with a different model.
+//
+// You can copy this code to https://play.go.dev modify the api key, models, and run it.
 
 const apiKey = "sk......."
 const baseModel = "google/gemini-2.0-flash-exp:free"

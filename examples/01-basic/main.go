@@ -7,6 +7,12 @@ import (
 	"github.com/eduardolat/openroutergo"
 )
 
+// This example demonstrates how to use the OpenRouterGo library to create and execute a chat
+// completion request.
+//
+// It provides a step-by-step guide on setting up the client, configuring the chat completion, and
+// handling the response.
+//
 // You can copy this code to https://play.go.dev modify the api key, model, and run it.
 
 const apiKey = "sk......."

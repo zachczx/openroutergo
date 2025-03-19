@@ -7,6 +7,11 @@ import (
 	"github.com/eduardolat/openroutergo"
 )
 
+// In this example, we create a base chat completion that can be cloned and reused multiple times.
+//
+// This demonstrates how to set up a reusable chat completion configuration, clone it, and execute
+// it with different user messages.
+//
 // You can copy this code to https://play.go.dev modify the api key, model, and run it.
 
 const apiKey = "sk......."

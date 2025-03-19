@@ -7,6 +7,12 @@ import (
 	"github.com/eduardolat/openroutergo"
 )
 
+// In this example, we demonstrate how to start a conversation with the model
+// and continue it using the same chat completion.
+//
+// The example shows how to reuse the chat completion to maintain the conversation
+// context, making it easy to continue the dialogue.
+//
 // You can copy this code to https://play.go.dev modify the api key, model, and run it.
 
 const apiKey = "sk......."

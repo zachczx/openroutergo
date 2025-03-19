@@ -9,6 +9,9 @@ import (
 	"github.com/eduardolat/openroutergo"
 )
 
+// This example demonstrates how to configure various options for a chat completion request
+// using the OpenRouterGo library.
+//
 // You can copy this code to https://play.go.dev modify the api key, model, and run it.
 
 const apiKey = "sk......."

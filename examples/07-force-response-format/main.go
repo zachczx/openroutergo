@@ -8,6 +8,10 @@ import (
 	"github.com/eduardolat/openroutergo"
 )
 
+// This example demonstrates how to use JSON Schema Mode to ensure that the model's response
+// matches a specific JSON schema. This guarantees that the response is not only valid JSON but
+// also adheres to the defined structure.
+//
 // You can copy this code to https://play.go.dev modify the api key, model, and run it.
 
 const apiKey = "sk......."

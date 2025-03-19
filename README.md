@@ -47,7 +47,7 @@ single consistent API.
 
 Go version 1.22 or higher is required.
 
-```go
+```bash
 go get github.com/eduardolat/openroutergo
 ```
 

@@ -155,7 +155,7 @@ func (b *chatCompletionBuilder) WithModel(model string) *chatCompletionBuilder {
 
 // WithModelFallback adds a model to the fallback list for the chat completion request.
 //
-// You can call this method multiple times to add more than one fallback model.
+// You can call this method up to 3 times to add more than one fallback model.
 //
 // This lets you automatically try other models if the primary model’s providers are down,
 // rate-limited, or refuse to reply due to content moderation.

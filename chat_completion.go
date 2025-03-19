@@ -114,10 +114,24 @@ type chatCompletionToolFunction struct {
 	Function ChatCompletionTool `json:"function"`
 }
 
+// ChatCompletionTool is a tool that can be used in a chat completion request.
+//
+//   - Models supporting tool calling: https://openrouter.ai/models?supported_parameters=tools
+//   - JSON Schema reference: https://json-schema.org/understanding-json-schema/reference
+//   - Tool calling example: https://platform.openai.com/docs/guides/function-calling
 type ChatCompletionTool struct {
-	Description string         `json:"description,omitempty,omitzero"`
-	Name        string         `json:"name"`
-	Parameters  map[string]any `json:"parameters"`
+	// The name of the tool, when the model calls this tool, it will return this name so
+	// you can identify it.
+	Name string `json:"name"`
+	// The description of the tool, make sure to give a good description so the model knows
+	// when to use it.
+	Description string `json:"description,omitempty,omitzero"`
+	// Make sure to define your tool's parameters using map[string]any and following the
+	// JSON Schema format.
+	//
+	//   - Format example: https://platform.openai.com/docs/guides/function-calling
+	//   - JSON Schema reference: https://json-schema.org/understanding-json-schema/reference
+	Parameters map[string]any `json:"parameters"`
 }
 
 // WithContext sets the context for the chat completion request.
@@ -382,7 +396,12 @@ func (b *chatCompletionBuilder) WithStop(stop []string) *chatCompletionBuilder {
 
 // WithTool adds a tool to the chat completion request so the model can return a tool call.
 //
-// See models supporting tool calling: https://openrouter.ai/models?supported_parameters=tools
+// If your tool requires parameters, read the [ChatCompletionTool] type documentation
+// for more information on how to define the parameters using JSON Schema.
+//
+//   - Models supporting tool calling: https://openrouter.ai/models?supported_parameters=tools
+//   - JSON Schema reference: https://json-schema.org/understanding-json-schema/reference
+//   - Tool calling example: https://platform.openai.com/docs/guides/function-calling
 func (b *chatCompletionBuilder) WithTool(tool ChatCompletionTool) *chatCompletionBuilder {
 	b.tools = append(b.tools, chatCompletionToolFunction{Type: "function", Function: tool})
 	return b

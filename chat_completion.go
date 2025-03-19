@@ -493,10 +493,47 @@ type errorResponse struct {
 	} `json:"error"`
 }
 
-// Execute executes the chat completion request with the configured parameters.
-func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
+// Execute the chat completion request with the configured parameters.
+//
+// Returns:
+//
+//   - The chat completion builder in the same state as before calling this method.
+//   - The response from the OpenRouter API.
+//   - An error if the request fails.
+//
+// IMPORTANT: The first return value (the builder) does not include the new assistant message content.
+// To continue the conversation with the assistant's response, you must explicitly add it using
+// the [WithAssistantMessage] method.
+//
+// Example:
+//
+//	completion := client.
+//		NewChatCompletion().
+//		WithModel("...").
+//		WithSystemMessage("You are a helpful assistant expert in geography.").
+//		WithUserMessage("What is the capital of France?")
+//
+//	completion, resp, err := completion.Execute()
+//	if err != nil {
+//		// handle error
+//	}
+//
+//	// Use the response, add the response to the builder to continue the conversation
+//	completion = completion.WithAssistantMessage(
+//		resp.Choices[0].Message.Content,
+//	)
+//
+//	// Use the same builder for another request
+//	completion = completion.WithUserMessage("Thank you!! Now, what is the capital of Germany?")
+//	_, resp, err = completion.Execute()
+//	if err != nil {
+//		// handle error
+//	}
+func (b *chatCompletionBuilder) Execute() (*chatCompletionBuilder, ChatCompletionResponse, error) {
+	clone := b.Clone()
+
 	if len(b.messages) == 0 {
-		return ChatCompletionResponse{}, ErrMessagesRequired
+		return clone, ChatCompletionResponse{}, ErrMessagesRequired
 	}
 
 	requestBodyMap := map[string]any{}
@@ -590,28 +627,28 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 
 	requestBodyBytes, err := json.Marshal(requestBodyMap)
 	if err != nil {
-		return ChatCompletionResponse{}, fmt.Errorf("failed to marshal request body: %w", err)
+		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
 	req, err := b.client.newRequest(b.ctx, http.MethodPost, "/chat/completions", requestBodyBytes)
 	if err != nil {
-		return ChatCompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
+		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	resp, err := b.client.httpClient.Do(req)
 	if err != nil {
-		return ChatCompletionResponse{}, fmt.Errorf("failed to send request: %w", err)
+		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return ChatCompletionResponse{}, fmt.Errorf("failed to read response body: %w", err)
+		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	var tempResp map[string]any
 	if err := json.Unmarshal(bodyBytes, &tempResp); err != nil {
-		return ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
+		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	if b.debug {
@@ -627,15 +664,15 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 	if tempResp["error"] != nil {
 		var errorResponse errorResponse
 		if err := json.Unmarshal(bodyBytes, &errorResponse); err != nil {
-			return ChatCompletionResponse{}, fmt.Errorf("failed to decode error response: %w", err)
+			return clone, ChatCompletionResponse{}, fmt.Errorf("failed to decode error response: %w", err)
 		}
-		return ChatCompletionResponse{}, fmt.Errorf("request failed with status code %d: %s", resp.StatusCode, errorResponse.Error.Message)
+		return clone, ChatCompletionResponse{}, fmt.Errorf("request failed with status code %d: %s", resp.StatusCode, errorResponse.Error.Message)
 	}
 
 	var response ChatCompletionResponse
 	if err := json.Unmarshal(bodyBytes, &response); err != nil {
-		return ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
+		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	return response, nil
+	return clone, response, nil
 }

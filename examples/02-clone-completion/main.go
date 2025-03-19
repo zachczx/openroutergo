@@ -12,7 +12,7 @@ import (
 // This demonstrates how to set up a reusable chat completion configuration, clone it, and execute
 // it with different user messages.
 //
-// You can copy this code to https://play.go.dev modify the api key, model, and run it.
+// You can copy this code modify the api key, model, and run it.
 
 const apiKey = "sk......."
 const model = "google/gemini-2.0-flash-exp:free"

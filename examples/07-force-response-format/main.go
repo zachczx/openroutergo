@@ -12,7 +12,7 @@ import (
 // matches a specific JSON schema. This guarantees that the response is not only valid JSON but
 // also adheres to the defined structure.
 //
-// You can copy this code to https://play.go.dev modify the api key, model, and run it.
+// You can copy this code modify the api key, model, and run it.
 
 const apiKey = "sk......."
 const model = "google/gemini-2.0-flash-exp:free"

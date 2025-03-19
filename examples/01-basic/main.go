@@ -13,7 +13,7 @@ import (
 // It provides a step-by-step guide on setting up the client, configuring the chat completion, and
 // handling the response.
 //
-// You can copy this code to https://play.go.dev modify the api key, model, and run it.
+// You can copy this code modify the api key, model, and run it.
 
 const apiKey = "sk......."
 const model = "google/gemini-2.0-flash-exp:free"

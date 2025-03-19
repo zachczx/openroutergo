@@ -14,7 +14,7 @@ import (
 // is handled by a model and when it fails because the rate limits, context window,
 // or other reasons, the request is automatically retried with a different model.
 //
-// You can copy this code to https://play.go.dev modify the api key, models, and run it.
+// You can copy this code modify the api key, models, and run it.
 
 const apiKey = "sk......."
 const baseModel = "google/gemini-2.0-flash-exp:free"

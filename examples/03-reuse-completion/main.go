@@ -13,7 +13,7 @@ import (
 // The example shows how to reuse the chat completion to maintain the conversation
 // context, making it easy to continue the dialogue.
 //
-// You can copy this code to https://play.go.dev modify the api key, model, and run it.
+// You can copy this code modify the api key, model, and run it.
 
 const apiKey = "sk......."
 const model = "google/gemini-2.0-flash-exp:free"

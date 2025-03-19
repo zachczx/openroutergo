@@ -14,7 +14,7 @@ import (
 // This requires a model that supports tools, you can find the list here:
 // https://openrouter.ai/models?supported_parameters=tools&order=top-weekly
 //
-// You can copy this code to https://play.go.dev modify the api key, model, and run it.
+// You can copy this code modify the api key, model, and run it.
 
 const apiKey = "sk......."
 const model = "google/gemini-2.0-flash-exp:free"

@@ -10,35 +10,6 @@ import (
 
 	"github.com/eduardolat/openroutergo/internal/debug"
 	"github.com/eduardolat/openroutergo/internal/optional"
-	"github.com/orsinium-labs/enum"
-)
-
-// chatCompletionRole is an enum for the role of a message in a chat completion.
-type chatCompletionRole enum.Member[string]
-
-// MarshalJSON implements the json.Marshaler interface for chatCompletionRole.
-func (ccr chatCompletionRole) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ccr.Value)
-}
-
-// UnmarshalJSON implements the json.Unmarshaler interface for chatCompletionRole.
-func (ccr *chatCompletionRole) UnmarshalJSON(data []byte) error {
-	var value string
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-
-	*ccr = chatCompletionRole{Value: value}
-	return nil
-}
-
-var (
-	// RoleSystem is the role of a system message in a chat completion.
-	RoleSystem = chatCompletionRole{"system"}
-	// RoleUser is the role of a user message in a chat completion.
-	RoleUser = chatCompletionRole{"user"}
-	// RoleAssistant is the role of an assistant message in a chat completion.
-	RoleAssistant = chatCompletionRole{"assistant"}
 )
 
 // NewChatCompletion creates a new chat completion request builder for the OpenRouter API.
@@ -55,7 +26,7 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 		ctx:                context.Background(),
 		model:              optional.String{IsSet: false},
 		fallbackModels:     []string{},
-		messages:           []chatCompletionMessage{},
+		messages:           []ChatCompletionMessage{},
 		temperature:        optional.Float64{IsSet: false},
 		topP:               optional.Float64{IsSet: false},
 		topK:               optional.Int{IsSet: false},
@@ -85,7 +56,7 @@ type chatCompletionBuilder struct {
 	ctx                context.Context
 	model              optional.String
 	fallbackModels     []string
-	messages           []chatCompletionMessage
+	messages           []ChatCompletionMessage
 	temperature        optional.Float64
 	topP               optional.Float64
 	topK               optional.Int
@@ -141,11 +112,6 @@ func (b *chatCompletionBuilder) Clone() *chatCompletionBuilder {
 		maxPromptPrice:     b.maxPromptPrice,
 		maxCompletionPrice: b.maxCompletionPrice,
 	}
-}
-
-type chatCompletionMessage struct {
-	Role    chatCompletionRole `json:"role"`    // Who the message is from.
-	Content string             `json:"content"` // The content of the message
 }
 
 type chatCompletionToolFunction struct {
@@ -216,23 +182,79 @@ func (b *chatCompletionBuilder) WithModelFallback(modelFallback string) *chatCom
 	return b
 }
 
+// WithMessage adds a message to the chat completion request.
+//
+// All messages are added to the request in the same order they are added.
+func (b *chatCompletionBuilder) WithMessage(message ChatCompletionMessage) *chatCompletionBuilder {
+	b.messages = append(b.messages, message)
+	return b
+}
+
 // WithSystemMessage adds a system message to the chat completion request.
 //
 // All messages are added to the request in the same order they are added.
 func (b *chatCompletionBuilder) WithSystemMessage(message string) *chatCompletionBuilder {
-	b.messages = append(b.messages, chatCompletionMessage{Role: RoleSystem, Content: message})
+	b.WithMessage(ChatCompletionMessage{Role: RoleSystem, Content: message})
+	return b
+}
+
+// WithDeveloperMessage adds a developer message to the chat completion request.
+//
+// All messages are added to the request in the same order they are added.
+func (b *chatCompletionBuilder) WithDeveloperMessage(message string) *chatCompletionBuilder {
+	b.WithMessage(ChatCompletionMessage{Role: RoleDeveloper, Content: message})
 	return b
 }
 
 // WithUserMessage adds a user message to the chat completion request.
-func (b *chatCompletionBuilder) WithUserMessage(message string) *chatCompletionBuilder {
-	b.messages = append(b.messages, chatCompletionMessage{Role: RoleUser, Content: message})
+//
+// If a name is provided, it will be used as the name of the user.
+//
+// All messages are added to the request in the same order they are added.
+func (b *chatCompletionBuilder) WithUserMessage(message string, name ...string) *chatCompletionBuilder {
+	uname := ""
+	if len(name) > 0 {
+		uname = name[0]
+	}
+
+	b.WithMessage(ChatCompletionMessage{Role: RoleUser, Content: message, Name: uname})
 	return b
 }
 
 // WithAssistantMessage adds an assistant message to the chat completion request.
-func (b *chatCompletionBuilder) WithAssistantMessage(message string) *chatCompletionBuilder {
-	b.messages = append(b.messages, chatCompletionMessage{Role: RoleAssistant, Content: message})
+//
+// If a name is provided, it will be used as the name of the assistant.
+//
+// All messages are added to the request in the same order they are added.
+func (b *chatCompletionBuilder) WithAssistantMessage(message string, name ...string) *chatCompletionBuilder {
+	uname := ""
+	if len(name) > 0 {
+		uname = name[0]
+	}
+
+	b.WithMessage(ChatCompletionMessage{Role: RoleAssistant, Content: message, Name: uname})
+	return b
+}
+
+// WithToolMessage adds a tool response message to the chat completion request.
+//
+// When the model asks to use a tool, use this method to send the tool's result
+// back to the model and continue the conversation.
+//
+// All messages are added to the request in the same order they are added.
+//
+// Arguments:
+//   - toolCallRequest: The tool request made by the model. This is needed so the model knows
+//     which tool request this message is responding to.
+//   - toolResponseContent: The result you got from the tool. This content will be sent
+//     back to the model.
+func (b *chatCompletionBuilder) WithToolMessage(toolCallRequest ChatCompletionMessageToolCall, toolResponseContent string) *chatCompletionBuilder {
+	b.WithMessage(ChatCompletionMessage{
+		Role:       RoleTool,
+		Name:       toolCallRequest.Function.Name,
+		ToolCallID: toolCallRequest.ID,
+		Content:    toolResponseContent,
+	})
 	return b
 }
 
@@ -497,13 +519,13 @@ type errorResponse struct {
 //
 // Returns:
 //
-//   - The chat completion builder in the same state as before calling this method.
+//   - The chat completion builder with the new assistant message added.
 //   - The response from the OpenRouter API.
 //   - An error if the request fails.
 //
-// IMPORTANT: The first return value (the builder) does not include the new assistant message content.
-// To continue the conversation with the assistant's response, you must explicitly add it using
-// the [WithAssistantMessage] method.
+// IMPORTANT: The first return value (the builder) now includes the new assistant message content
+// returned by the OpenRouter API, allowing you to continue the conversation seamlessly without
+// manually adding the assistant's response.
 //
 // Example:
 //
@@ -518,10 +540,8 @@ type errorResponse struct {
 //		// handle error
 //	}
 //
-//	// Use the response, add the response to the builder to continue the conversation
-//	completion = completion.WithAssistantMessage(
-//		resp.Choices[0].Message.Content,
-//	)
+//	// Use the response, then you can continue the conversation with the assistant
+//	fmt.Println("Response: ", resp.Choices[0].Message.Content)
 //
 //	// Use the same builder for another request
 //	completion = completion.WithUserMessage("Thank you!! Now, what is the capital of Germany?")
@@ -529,11 +549,11 @@ type errorResponse struct {
 //	if err != nil {
 //		// handle error
 //	}
+//
+//	fmt.Println("Response: ", resp.Choices[0].Message.Content)
 func (b *chatCompletionBuilder) Execute() (*chatCompletionBuilder, ChatCompletionResponse, error) {
-	clone := b.Clone()
-
 	if len(b.messages) == 0 {
-		return clone, ChatCompletionResponse{}, ErrMessagesRequired
+		return b, ChatCompletionResponse{}, ErrMessagesRequired
 	}
 
 	requestBodyMap := map[string]any{}
@@ -627,28 +647,28 @@ func (b *chatCompletionBuilder) Execute() (*chatCompletionBuilder, ChatCompletio
 
 	requestBodyBytes, err := json.Marshal(requestBodyMap)
 	if err != nil {
-		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to marshal request body: %w", err)
+		return b, ChatCompletionResponse{}, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
 	req, err := b.client.newRequest(b.ctx, http.MethodPost, "/chat/completions", requestBodyBytes)
 	if err != nil {
-		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
+		return b, ChatCompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	resp, err := b.client.httpClient.Do(req)
 	if err != nil {
-		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to send request: %w", err)
+		return b, ChatCompletionResponse{}, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to read response body: %w", err)
+		return b, ChatCompletionResponse{}, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	var tempResp map[string]any
 	if err := json.Unmarshal(bodyBytes, &tempResp); err != nil {
-		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
+		return b, ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	if b.debug {
@@ -664,15 +684,22 @@ func (b *chatCompletionBuilder) Execute() (*chatCompletionBuilder, ChatCompletio
 	if tempResp["error"] != nil {
 		var errorResponse errorResponse
 		if err := json.Unmarshal(bodyBytes, &errorResponse); err != nil {
-			return clone, ChatCompletionResponse{}, fmt.Errorf("failed to decode error response: %w", err)
+			return b, ChatCompletionResponse{}, fmt.Errorf("failed to decode error response: %w", err)
 		}
-		return clone, ChatCompletionResponse{}, fmt.Errorf("request failed with status code %d: %s", resp.StatusCode, errorResponse.Error.Message)
+		return b, ChatCompletionResponse{}, fmt.Errorf("request failed with status code %d: %s", resp.StatusCode, errorResponse.Error.Message)
 	}
 
 	var response ChatCompletionResponse
 	if err := json.Unmarshal(bodyBytes, &response); err != nil {
-		return clone, ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
+		return b, ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	return clone, response, nil
+	// Add all the response messages to the builder so we can continue the conversation
+	if len(response.Choices) > 0 {
+		for _, choice := range response.Choices {
+			b.WithMessage(choice.Message)
+		}
+	}
+
+	return b, response, nil
 }

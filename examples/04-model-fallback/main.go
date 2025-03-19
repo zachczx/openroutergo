@@ -2,26 +2,26 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
 
 	"github.com/eduardolat/openroutergo"
 )
 
 // You can copy this code to https://play.go.dev modify the api key, model, and run it.
 
+// In this example, we use a paid model as last fallback and is only used if
+// all free models fail.
+
 const apiKey = "sk......."
 const baseModel = "google/gemini-2.0-flash-exp:free"
 const firstFallbackModel = "google/gemini-2.0-flash-thinking-exp-1219:free"
 const secondFallbackModel = "deepseek/deepseek-r1-zero:free"
-
-// Paid model as last fallback if all free models fail
 const thirdFallbackModel = "google/gemini-2.0-flash-001"
 
 func main() {
 	client, err := openroutergo.NewClient().WithAPIKey(apiKey).Create()
 	if err != nil {
-		fmt.Printf("Failed to create client: %v", err)
-		os.Exit(1)
+		log.Fatalf("Failed to create client: %v", err)
 	}
 
 	completion := client.
@@ -36,10 +36,10 @@ func main() {
 
 	_, resp, err := completion.Execute()
 	if err != nil {
-		fmt.Printf("Failed to execute completion: %v", err)
-		os.Exit(1)
+		log.Fatalf("Failed to execute completion: %v", err)
 	}
 
-	fmt.Printf("Model used: %v", resp.Model)
-	fmt.Printf("Response: %v", resp.Choices[0].Message.Content)
+	fmt.Println("Model used:", resp.Model)
+	fmt.Println("Provider used:", resp.Provider)
+	fmt.Println("Response:", resp.Choices[0].Message.Content)
 }

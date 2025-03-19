@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
 
 	"github.com/eduardolat/openroutergo"
 )
@@ -15,8 +15,7 @@ const model = "google/gemini-2.0-flash-exp:free"
 func main() {
 	client, err := openroutergo.NewClient().WithAPIKey(apiKey).Create()
 	if err != nil {
-		fmt.Printf("Failed to create client: %v", err)
-		os.Exit(1)
+		log.Fatalf("Failed to create client: %v", err)
 	}
 
 	// Create a base completion to be cloned and reused
@@ -32,10 +31,9 @@ func main() {
 		WithUserMessage("What is the capital of France?").
 		Execute()
 	if err != nil {
-		fmt.Printf("Failed to execute completion: %v", err)
-		os.Exit(1)
+		log.Fatalf("Failed to execute completion: %v", err)
 	}
-	fmt.Printf("Response: %v", resp.Choices[0].Message.Content)
+	fmt.Println("Response:", resp.Choices[0].Message.Content)
 
 	// Clone the original completion once again and execute it
 	_, resp, err = baseCompletion.
@@ -43,8 +41,7 @@ func main() {
 		WithUserMessage("What is the capital of Germany?").
 		Execute()
 	if err != nil {
-		fmt.Printf("Failed to execute completion: %v", err)
-		os.Exit(1)
+		log.Fatalf("Failed to execute completion: %v", err)
 	}
-	fmt.Printf("Response: %v", resp.Choices[0].Message.Content)
+	fmt.Println("Response:", resp.Choices[0].Message.Content)
 }

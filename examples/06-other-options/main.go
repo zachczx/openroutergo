@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/eduardolat/openroutergo"
 )
@@ -13,31 +14,32 @@ const apiKey = "sk......."
 const model = "google/gemini-2.0-flash-exp:free"
 
 func main() {
-	client, err := openroutergo.NewClient().WithAPIKey(apiKey).Create()
+	client, err := openroutergo.
+		NewClient().
+		WithAPIKey(apiKey).
+		WithTimeout(10 * time.Minute).        // Set a timeout for the client requests
+		WithRefererURL("https://my-app.com"). // Optional, for rankings on openrouter.ai
+		WithRefererTitle("My App").           // Optional, for rankings on openrouter.ai
+		Create()
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	// Create and execute a completion
-	completion, resp, err := client.
+	// You can use your code editor to help you explore all the available options.
+	completion := client.
 		NewChatCompletion().
 		WithDebug(true).  // Enable debug mode to see the request and response in the console
 		WithModel(model). // Change the model if you want
+		WithTemperature(0.5).
+		WithMaxPrice(0.5, 2).
+		WithMaxTokens(1000).
 		WithSystemMessage("You are a helpful assistant expert in geography.").
-		WithUserMessage("What is the capital of France?").
-		Execute()
-	if err != nil {
-		log.Fatalf("Failed to execute completion: %v", err)
-	}
-	fmt.Println("Response:", resp.Choices[0].Message.Content)
+		WithUserMessage("What is the capital of France?")
 
-	// Reuse the completion to continue the conversation, the assistant message of the previous
-	// completion is automatically added so you can continue the conversation easily.
-	_, resp, err = completion.
-		WithUserMessage("Thanks! Now, what is the capital of Germany?").
-		Execute()
+	_, resp, err := completion.Execute()
 	if err != nil {
 		log.Fatalf("Failed to execute completion: %v", err)
 	}
+
 	fmt.Println("Response:", resp.Choices[0].Message.Content)
 }

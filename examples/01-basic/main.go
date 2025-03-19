@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
 
 	"github.com/eduardolat/openroutergo"
 )
@@ -20,8 +20,7 @@ func main() {
 		WithRefererTitle("My App").           // Optional, for rankings on openrouter.ai
 		Create()
 	if err != nil {
-		fmt.Printf("Failed to create client: %v", err)
-		os.Exit(1)
+		log.Fatalf("Failed to create client: %v", err)
 	}
 
 	completion := client.
@@ -33,9 +32,8 @@ func main() {
 
 	_, resp, err := completion.Execute()
 	if err != nil {
-		fmt.Printf("Failed to execute completion: %v", err)
-		os.Exit(1)
+		log.Fatalf("Failed to execute completion: %v", err)
 	}
 
-	fmt.Printf("Response: %v", resp.Choices[0].Message.Content)
+	fmt.Println("Response:", resp.Choices[0].Message.Content)
 }

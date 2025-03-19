@@ -63,11 +63,14 @@ import (
 	"github.com/eduardolat/openroutergo"
 )
 
+const apiKey = "sk......."
+const model = "deepseek/deepseek-r1:free"
+
 func main() {
 	// Create a client with your API key
 	client, err := openroutergo.
 		NewClient().
-		WithAPIKey("your-api-key").
+		WithAPIKey(apiKey).
 		Create()
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
@@ -76,7 +79,7 @@ func main() {
 	// Build and execute your request with a fluent API
 	completion, resp, err := client.
 		NewChatCompletion().
-		WithModel("google/gemini-2.0-flash-exp:free").
+		WithModel(model).
 		WithSystemMessage("You are a helpful assistant expert in geography.").
 		WithUserMessage("What is the capital of France?").
 		Execute()

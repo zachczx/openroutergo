@@ -57,7 +57,7 @@ func main() {
 		log.Fatalf("Failed to execute completion: %v", err)
 	}
 
-	if len(resp.Choices) == 0 || len(resp.Choices[0].Message.ToolCalls) == 0 {
+	if !resp.HasChoices() || !resp.Choices[0].Message.HasToolCalls() {
 		log.Fatalf("No tool calls returned")
 	}
 

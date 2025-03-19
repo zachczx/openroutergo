@@ -11,7 +11,7 @@ import (
 func PrintAsJSON(v any) {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
-		fmt.Printf("failed to marshal for pretty print: %v\n", err)
+		fmt.Printf("debug print as JSON failed to marshal: %v\n", err)
 		return
 	}
 

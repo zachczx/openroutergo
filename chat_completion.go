@@ -120,19 +120,6 @@ type ChatCompletionTool struct {
 	Parameters  map[string]any `json:"parameters"`
 }
 
-// ChatCompletionResponse is the response from the OpenRouter API for a chat completion request.
-type ChatCompletionResponse struct {
-	ID      string `json:"id"`
-	Choices []struct {
-		Message struct {
-			// Who the message is from. Must be one of openroutergo.RoleSystem, openroutergo.RoleUser, or openroutergo.RoleAssistant.
-			Role chatCompletionRole `json:"role"`
-			// The content of the message
-			Content string `json:"content"`
-		} `json:"message"`
-	} `json:"choices"`
-}
-
 // WithContext sets the context for the chat completion request.
 //
 // If not set, a context.Background() context will be used.

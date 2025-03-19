@@ -92,7 +92,7 @@ func (b *chatCompletionBuilder) Clone() *chatCompletionBuilder {
 	return &chatCompletionBuilder{
 		client:             b.client,
 		mu:                 sync.Mutex{},
-		executing:          b.executing,
+		executing:          false,
 		debug:              b.debug,
 		ctx:                b.ctx,
 		messages:           b.messages,

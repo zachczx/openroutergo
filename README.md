@@ -63,6 +63,7 @@ import (
 	"github.com/eduardolat/openroutergo"
 )
 
+// Replace with your own API key and the model you want to use
 const apiKey = "sk......."
 const model = "deepseek/deepseek-r1:free"
 

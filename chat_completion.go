@@ -30,7 +30,7 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 		temperature:        optional.Float64{IsSet: false},
 		topP:               optional.Float64{IsSet: false},
 		topK:               optional.Int{IsSet: false},
-		frecuencyPenalty:   optional.Float64{IsSet: false},
+		frequencyPenalty:   optional.Float64{IsSet: false},
 		presencePenalty:    optional.Float64{IsSet: false},
 		repetitionPenalty:  optional.Float64{IsSet: false},
 		minP:               optional.Float64{IsSet: false},
@@ -60,7 +60,7 @@ type chatCompletionBuilder struct {
 	temperature        optional.Float64
 	topP               optional.Float64
 	topK               optional.Int
-	frecuencyPenalty   optional.Float64
+	frequencyPenalty   optional.Float64
 	presencePenalty    optional.Float64
 	repetitionPenalty  optional.Float64
 	minP               optional.Float64
@@ -94,7 +94,7 @@ func (b *chatCompletionBuilder) Clone() *chatCompletionBuilder {
 		temperature:        b.temperature,
 		topP:               b.topP,
 		topK:               b.topK,
-		frecuencyPenalty:   b.frecuencyPenalty,
+		frequencyPenalty:   b.frequencyPenalty,
 		presencePenalty:    b.presencePenalty,
 		repetitionPenalty:  b.repetitionPenalty,
 		minP:               b.minP,
@@ -314,7 +314,7 @@ func (b *chatCompletionBuilder) WithTopK(topK int) *chatCompletionBuilder {
 //   - Docs: https://openrouter.ai/docs/api-reference/parameters#frequency-penalty
 //   - Explanation: https://youtu.be/p4gl6fqI0_w
 func (b *chatCompletionBuilder) WithFrequencyPenalty(frequencyPenalty float64) *chatCompletionBuilder {
-	b.frecuencyPenalty = optional.Float64{IsSet: true, Value: frequencyPenalty}
+	b.frequencyPenalty = optional.Float64{IsSet: true, Value: frequencyPenalty}
 	return b
 }
 
@@ -575,8 +575,8 @@ func (b *chatCompletionBuilder) Execute() (*chatCompletionBuilder, ChatCompletio
 	if b.topK.IsSet {
 		requestBodyMap["top_k"] = b.topK.Value
 	}
-	if b.frecuencyPenalty.IsSet {
-		requestBodyMap["frequency_penalty"] = b.frecuencyPenalty.Value
+	if b.frequencyPenalty.IsSet {
+		requestBodyMap["frequency_penalty"] = b.frequencyPenalty.Value
 	}
 	if b.presencePenalty.IsSet {
 		requestBodyMap["presence_penalty"] = b.presencePenalty.Value

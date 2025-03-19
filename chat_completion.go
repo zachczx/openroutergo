@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"sync"
 
 	"github.com/eduardolat/openroutergo/internal/debug"
 	"github.com/eduardolat/openroutergo/internal/optional"
@@ -22,6 +23,8 @@ import (
 func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 	return &chatCompletionBuilder{
 		client:             c,
+		mu:                 sync.Mutex{},
+		executing:          false,
 		debug:              false,
 		ctx:                context.Background(),
 		model:              optional.String{IsSet: false},
@@ -52,6 +55,8 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 
 type chatCompletionBuilder struct {
 	client             *Client
+	mu                 sync.Mutex
+	executing          bool
 	debug              bool
 	ctx                context.Context
 	model              optional.String
@@ -86,6 +91,8 @@ type chatCompletionBuilder struct {
 func (b *chatCompletionBuilder) Clone() *chatCompletionBuilder {
 	return &chatCompletionBuilder{
 		client:             b.client,
+		mu:                 sync.Mutex{},
+		executing:          b.executing,
 		debug:              b.debug,
 		ctx:                b.ctx,
 		messages:           b.messages,
@@ -552,6 +559,20 @@ type errorResponse struct {
 //
 //	fmt.Println("Response: ", resp.Choices[0].Message.Content)
 func (b *chatCompletionBuilder) Execute() (*chatCompletionBuilder, ChatCompletionResponse, error) {
+	if b.executing {
+		return b, ChatCompletionResponse{}, ErrAlreadyExecuting
+	}
+
+	b.mu.Lock()
+	b.executing = true
+	b.mu.Unlock()
+
+	defer func() {
+		b.mu.Lock()
+		b.executing = false
+		b.mu.Unlock()
+	}()
+
 	if len(b.messages) == 0 {
 		return b, ChatCompletionResponse{}, ErrMessagesRequired
 	}

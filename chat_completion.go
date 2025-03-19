@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
 
@@ -434,6 +435,18 @@ func (b *chatCompletionBuilder) WithMaxPrice(maxPromptPrice float64, maxCompleti
 	return b
 }
 
+// errorResponse is a struct that represents an error response when there is an error
+// in the response from the OpenRouter API.
+//
+//   - Docs: https://openrouter.ai/docs/api-reference/errors
+type errorResponse struct {
+	Error struct {
+		Code     int            `json:"code"`
+		Message  string         `json:"message"`
+		Metadata map[string]any `json:"metadata"`
+	} `json:"error"`
+}
+
 // Execute executes the chat completion request with the configured parameters.
 func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 	if len(b.messages) == 0 {
@@ -536,12 +549,26 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return ChatCompletionResponse{}, fmt.Errorf("request failed with status code %d", resp.StatusCode)
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ChatCompletionResponse{}, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var tempResp map[string]json.RawMessage
+	if err := json.Unmarshal(bodyBytes, &tempResp); err != nil {
+		return ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	if tempResp["error"] != nil {
+		var errorResponse errorResponse
+		if err := json.Unmarshal(bodyBytes, &errorResponse); err != nil {
+			return ChatCompletionResponse{}, fmt.Errorf("failed to decode error response: %w", err)
+		}
+		return ChatCompletionResponse{}, fmt.Errorf("request failed with status code %d: %s", resp.StatusCode, errorResponse.Error.Message)
 	}
 
 	var response ChatCompletionResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	if err := json.Unmarshal(bodyBytes, &response); err != nil {
 		return ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
 	}
 

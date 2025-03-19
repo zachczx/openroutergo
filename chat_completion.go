@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/eduardolat/openroutergo/internal/debug"
 	"github.com/eduardolat/openroutergo/internal/optional"
 	"github.com/orsinium-labs/enum"
 )
@@ -50,6 +51,7 @@ var (
 func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 	return &chatCompletionBuilder{
 		client:             c,
+		debug:              false,
 		ctx:                context.Background(),
 		model:              optional.String{IsSet: false},
 		fallbackModels:     []string{},
@@ -79,6 +81,7 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 
 type chatCompletionBuilder struct {
 	client             *Client
+	debug              bool
 	ctx                context.Context
 	model              optional.String
 	fallbackModels     []string
@@ -103,6 +106,41 @@ type chatCompletionBuilder struct {
 	toolChoice         optional.String
 	maxPromptPrice     optional.Float64
 	maxCompletionPrice optional.Float64
+}
+
+// Clone returns a completely new chat completion builder with the same configuration as the current
+// builder.
+//
+// This is useful if you want to reuse the same configuration for multiple requests.
+func (b *chatCompletionBuilder) Clone() *chatCompletionBuilder {
+	return &chatCompletionBuilder{
+		client:             b.client,
+		debug:              b.debug,
+		ctx:                b.ctx,
+		messages:           b.messages,
+		model:              b.model,
+		fallbackModels:     b.fallbackModels,
+		temperature:        b.temperature,
+		topP:               b.topP,
+		topK:               b.topK,
+		frecuencyPenalty:   b.frecuencyPenalty,
+		presencePenalty:    b.presencePenalty,
+		repetitionPenalty:  b.repetitionPenalty,
+		minP:               b.minP,
+		topA:               b.topA,
+		seed:               b.seed,
+		maxTokens:          b.maxTokens,
+		logitBias:          b.logitBias,
+		logprobs:           b.logprobs,
+		topLogprobs:        b.topLogprobs,
+		responseFormat:     b.responseFormat,
+		structuredOutputs:  b.structuredOutputs,
+		stop:               b.stop,
+		tools:              b.tools,
+		toolChoice:         b.toolChoice,
+		maxPromptPrice:     b.maxPromptPrice,
+		maxCompletionPrice: b.maxCompletionPrice,
+	}
 }
 
 type chatCompletionMessage struct {
@@ -133,6 +171,14 @@ type ChatCompletionTool struct {
 	//   - Format example: https://platform.openai.com/docs/guides/function-calling
 	//   - JSON Schema reference: https://json-schema.org/understanding-json-schema/reference
 	Parameters map[string]any `json:"parameters"`
+}
+
+// WithDebug sets the debug flag for the chat completion request.
+//
+// If true, the JSON request and response will be printed to the console for debugging purposes.
+func (b *chatCompletionBuilder) WithDebug(debug bool) *chatCompletionBuilder {
+	b.debug = debug
+	return b
 }
 
 // WithContext sets the context for the chat completion request.
@@ -533,6 +579,15 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 		}
 	}
 
+	if b.debug {
+		fmt.Println()
+		fmt.Println("---------------------------")
+		fmt.Println("-- Request to OpenRouter --")
+		fmt.Println("---------------------------")
+		debug.PrintAsJSON(requestBodyMap)
+		fmt.Println()
+	}
+
 	requestBodyBytes, err := json.Marshal(requestBodyMap)
 	if err != nil {
 		return ChatCompletionResponse{}, fmt.Errorf("failed to marshal request body: %w", err)
@@ -554,9 +609,19 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 		return ChatCompletionResponse{}, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	var tempResp map[string]json.RawMessage
+	var tempResp map[string]any
 	if err := json.Unmarshal(bodyBytes, &tempResp); err != nil {
 		return ChatCompletionResponse{}, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	if b.debug {
+		fmt.Println()
+		fmt.Println("------------------------------")
+		fmt.Println("-- Response from OpenRouter --")
+		fmt.Println("------------------------------")
+		fmt.Printf("Status code: %d\n", resp.StatusCode)
+		debug.PrintAsJSON(tempResp)
+		fmt.Println()
 	}
 
 	if tempResp["error"] != nil {

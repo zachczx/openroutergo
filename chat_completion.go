@@ -440,13 +440,21 @@ func (b *chatCompletionBuilder) WithTopLogprobs(topLogprobs int) *chatCompletion
 
 // WithResponseFormat sets the response format for the chat completion request.
 //
-// Forces the model to produce specific output format. Setting to { "type": "json_object" }
-// enables JSON mode, which guarantees the message the model generates is valid JSON.
+// Forces the model to produce specific output format.
+//
+// Setting to { "type": "json_object" } enables JSON mode, which guarantees the message the model
+// generates is valid JSON.
+//
+// Setting to { "type": "json_schema", "json_schema": { "name": "...", "schema": {...} } } enables
+// the JSON Schema mode, which guarantees the message the model generates is valid JSON and matches
+// the provided schema.
 //
 // Note: when using JSON mode, you should also instruct the model to produce JSON
 // yourself via a system or user message.
 //
 //   - Docs: https://openrouter.ai/docs/api-reference/parameters#response-format
+//   - More info (read all): https://platform.openai.com/docs/guides/structured-outputs
+//   - Example: https://platform.openai.com/docs/guides/structured-outputs?lang=curl&format=without-parse&api-mode=chat#how-to-use
 func (b *chatCompletionBuilder) WithResponseFormat(responseFormat map[string]any) *chatCompletionBuilder {
 	b.responseFormat = optional.MapStringAny{IsSet: true, Value: responseFormat}
 	return b

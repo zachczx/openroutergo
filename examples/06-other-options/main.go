@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -12,6 +13,7 @@ import (
 
 const apiKey = "sk......."
 const model = "google/gemini-2.0-flash-exp:free"
+const modelFallback = "deepseek/deepseek-r1-zero:free"
 
 func main() {
 	client, err := openroutergo.
@@ -25,11 +27,15 @@ func main() {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	// You can use your code editor to help you explore all the available options.
+	// You can use your code editor to help you explore all the available options but
+	// here are some of the most useful ones
 	completion := client.
 		NewChatCompletion().
-		WithDebug(true).  // Enable debug mode to see the request and response in the console
-		WithModel(model). // Change the model if you want
+		WithContext(context.Background()).
+		WithDebug(true).
+		WithModel(model).
+		WithModelFallback(modelFallback).
+		WithSeed(1234567890).
 		WithTemperature(0.5).
 		WithMaxPrice(0.5, 2).
 		WithMaxTokens(1000).

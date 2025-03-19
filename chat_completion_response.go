@@ -61,6 +61,11 @@ type ChatCompletionResponse struct {
 	Object string `json:"object"`
 }
 
+// HasChoices returns true if the chat completion has choices.
+func (c ChatCompletionResponse) HasChoices() bool {
+	return len(c.Choices) > 0
+}
+
 type ChatCompletionResponseChoice struct {
 	// The reason the model stopped generating tokens. This will be `stop` if the model hit a
 	// natural stop point or a provided stop sequence, `length` if the maximum number of

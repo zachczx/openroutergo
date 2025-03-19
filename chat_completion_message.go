@@ -19,6 +19,11 @@ type ChatCompletionMessage struct {
 	ToolCalls []ChatCompletionMessageToolCall `json:"tool_calls,omitempty,omitzero"`
 }
 
+// HasToolCalls returns true if the message has tool calls.
+func (c ChatCompletionMessage) HasToolCalls() bool {
+	return len(c.ToolCalls) > 0
+}
+
 // chatCompletionRole is an enum for the role of a message in a chat completion.
 type chatCompletionRole enum.Member[string]
 

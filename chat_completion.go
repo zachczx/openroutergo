@@ -51,6 +51,7 @@ func (c *Client) NewChatCompletion() *chatCompletionBuilder {
 		client:             c,
 		ctx:                context.Background(),
 		model:              optional.String{IsSet: false},
+		fallbackModels:     []string{},
 		messages:           []chatCompletionMessage{},
 		temperature:        optional.Float64{IsSet: false},
 		topP:               optional.Float64{IsSet: false},
@@ -79,6 +80,7 @@ type chatCompletionBuilder struct {
 	client             *Client
 	ctx                context.Context
 	model              optional.String
+	fallbackModels     []string
 	messages           []chatCompletionMessage
 	temperature        optional.Float64
 	topP               optional.Float64
@@ -146,6 +148,23 @@ func (b *chatCompletionBuilder) WithContext(ctx context.Context) *chatCompletion
 // You can search for models here: https://openrouter.ai/models
 func (b *chatCompletionBuilder) WithModel(model string) *chatCompletionBuilder {
 	b.model = optional.String{IsSet: true, Value: model}
+	return b
+}
+
+// WithModelFallback adds a model to the fallback list for the chat completion request.
+//
+// You can call this method multiple times to add more than one fallback model.
+//
+// This lets you automatically try other models if the primary model’s providers are down,
+// rate-limited, or refuse to reply due to content moderation.
+//
+// If the primary model is not available, all the fallback models will be tried in the
+// same order they were added.
+//
+//   - Docs: https://openrouter.ai/docs/features/model-routing#the-models-parameter
+//   - Example: https://openrouter.ai/docs/features/model-routing#using-with-openai-sdk
+func (b *chatCompletionBuilder) WithModelFallback(modelFallback string) *chatCompletionBuilder {
+	b.fallbackModels = append(b.fallbackModels, modelFallback)
 	return b
 }
 
@@ -421,6 +440,9 @@ func (b *chatCompletionBuilder) Execute() (ChatCompletionResponse, error) {
 	}
 	if b.model.IsSet {
 		requestBodyMap["model"] = b.model.Value
+	}
+	if len(b.fallbackModels) > 0 {
+		requestBodyMap["models"] = b.fallbackModels
 	}
 	if b.temperature.IsSet {
 		requestBodyMap["temperature"] = b.temperature.Value

@@ -646,6 +646,9 @@ func (b *chatCompletionBuilder) Execute() (*chatCompletionBuilder, ChatCompletio
 	if len(b.tools) > 0 {
 		requestBodyMap["tools"] = b.tools
 	}
+
+	requestBodyMap["stream"] = true
+
 	if b.toolChoice.IsSet {
 		if slices.Contains([]string{"none", "auto", "required"}, b.toolChoice.Value) {
 			requestBodyMap["tool_choice"] = b.toolChoice.Value

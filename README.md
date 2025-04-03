@@ -1,5 +1,11 @@
 # OpenRouterGo
 
+## Forked
+
+Forked from eduardolat/openroutergo
+
+## What's this
+
 A powerful, developer-friendly Go SDK for
 [OpenRouter.ai](https://openrouter.ai) - the platform that gives you unified
 access to 100+ AI models from OpenAI, Anthropic, Google, and more through a

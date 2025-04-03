@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/eduardolat/openroutergo"
+	"github.com/zachczx/openroutergo"
 )
 
 // This example demonstrates how to use JSON Schema Mode to ensure that the model's response
@@ -14,8 +14,10 @@ import (
 //
 // You can copy this code modify the api key, model, and run it.
 
-const apiKey = "sk......."
-const model = "google/gemini-2.0-flash-exp:free"
+const (
+	apiKey = "sk......."
+	model  = "google/gemini-2.0-flash-exp:free"
+)
 
 func main() {
 	client, err := openroutergo.

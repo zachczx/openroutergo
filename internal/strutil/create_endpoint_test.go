@@ -3,7 +3,7 @@ package strutil
 import (
 	"testing"
 
-	"github.com/eduardolat/openroutergo/internal/assert"
+	"github.com/zachczx/openroutergo/internal/assert"
 )
 
 func TestCreateEndpoint(t *testing.T) {

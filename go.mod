@@ -1,4 +1,4 @@
-module github.com/eduardolat/openroutergo
+module github.com/zachczx/openroutergo
 
 go 1.22
 

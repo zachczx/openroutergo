@@ -29,7 +29,7 @@ echo "[OK] git configured"
 
 echo "
 ────────────────────────────────────────────────────────
-── Github: https://github.com/eduardolat/openroutergo ──
+── Github: https://github.com/zachczx/openroutergo ──
 ────────────────────────────────────────────────────────
 ── Development environment is ready to use! ────────────
 ────────────────────────────────────────────────────────

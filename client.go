@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/eduardolat/openroutergo/internal/optional"
-	"github.com/eduardolat/openroutergo/internal/strutil"
+	"github.com/zachczx/openroutergo/internal/optional"
+	"github.com/zachczx/openroutergo/internal/strutil"
 )
 
 const (

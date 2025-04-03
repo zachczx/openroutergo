@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/eduardolat/openroutergo"
+	"github.com/zachczx/openroutergo"
 )
 
 // This example demonstrates how to use a model that supports tools to get the weather
@@ -16,8 +16,10 @@ import (
 //
 // You can copy this code modify the api key, model, and run it.
 
-const apiKey = "sk......."
-const model = "google/gemini-2.0-flash-exp:free"
+const (
+	apiKey = "sk......."
+	model  = "google/gemini-2.0-flash-exp:free"
+)
 
 func getWeather(city string) string {
 	// This is a fake function that returns a string but you can

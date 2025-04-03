@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/eduardolat/openroutergo/internal/assert"
+	"github.com/zachczx/openroutergo/internal/assert"
 )
 
 func TestOptionalGenericType(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/eduardolat/openroutergo"
+	"github.com/zachczx/openroutergo"
 )
 
 // In this example, we create a base chat completion that can be cloned and reused multiple times.
@@ -14,8 +14,10 @@ import (
 //
 // You can copy this code modify the api key, model, and run it.
 
-const apiKey = "sk......."
-const model = "google/gemini-2.0-flash-exp:free"
+const (
+	apiKey = "sk......."
+	model  = "google/gemini-2.0-flash-exp:free"
+)
 
 func main() {
 	client, err := openroutergo.NewClient().WithAPIKey(apiKey).Create()

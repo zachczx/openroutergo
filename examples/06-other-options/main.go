@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/eduardolat/openroutergo"
+	"github.com/zachczx/openroutergo"
 )
 
 // This example demonstrates how to configure various options for a chat completion request
@@ -14,9 +14,11 @@ import (
 //
 // You can copy this code modify the api key, model, and run it.
 
-const apiKey = "sk......."
-const model = "google/gemini-2.0-flash-exp:free"
-const modelFallback = "deepseek/deepseek-r1-zero:free"
+const (
+	apiKey        = "sk......."
+	model         = "google/gemini-2.0-flash-exp:free"
+	modelFallback = "deepseek/deepseek-r1-zero:free"
+)
 
 func main() {
 	client, err := openroutergo.

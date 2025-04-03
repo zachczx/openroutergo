@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/eduardolat/openroutergo"
+	"github.com/zachczx/openroutergo"
 )
 
 // In this example, we set up three fallback models. The idea is to use free models
@@ -16,11 +16,13 @@ import (
 //
 // You can copy this code modify the api key, models, and run it.
 
-const apiKey = "sk......."
-const baseModel = "google/gemini-2.0-flash-exp:free"
-const firstFallbackModel = "google/gemini-2.0-flash-thinking-exp-1219:free"
-const secondFallbackModel = "deepseek/deepseek-r1-zero:free"
-const thirdFallbackModel = "google/gemini-2.0-flash-001"
+const (
+	apiKey              = "sk......."
+	baseModel           = "google/gemini-2.0-flash-exp:free"
+	firstFallbackModel  = "google/gemini-2.0-flash-thinking-exp-1219:free"
+	secondFallbackModel = "deepseek/deepseek-r1-zero:free"
+	thirdFallbackModel  = "google/gemini-2.0-flash-001"
+)
 
 func main() {
 	client, err := openroutergo.NewClient().WithAPIKey(apiKey).Create()

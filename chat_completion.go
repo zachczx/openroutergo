@@ -9,8 +9,8 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/eduardolat/openroutergo/internal/debug"
-	"github.com/eduardolat/openroutergo/internal/optional"
+	"github.com/zachczx/openroutergo/internal/debug"
+	"github.com/zachczx/openroutergo/internal/optional"
 )
 
 // NewChatCompletion creates a new chat completion request builder for the OpenRouter API.

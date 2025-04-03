@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/eduardolat/openroutergo"
+	"github.com/zachczx/openroutergo"
 )
 
 // In this example, we demonstrate how to start a conversation with the model
@@ -15,8 +15,10 @@ import (
 //
 // You can copy this code modify the api key, model, and run it.
 
-const apiKey = "sk......."
-const model = "google/gemini-2.0-flash-exp:free"
+const (
+	apiKey = "sk......."
+	model  = "google/gemini-2.0-flash-exp:free"
+)
 
 func main() {
 	client, err := openroutergo.NewClient().WithAPIKey(apiKey).Create()
